@@ -29,6 +29,7 @@ export default function Main() {
   }
 
   useEffect(() => {
+    document.title = "Chats_App"
     generateId()
 
 

@@ -7,6 +7,7 @@ import axios from 'axios'
 
 export default function Main() {
 
+  
 
   const [show1, setShow1] = useState(true);
   const [show2, setShow2] = useState(false);
@@ -213,8 +214,15 @@ export default function Main() {
 
         </div>
 
-      </div>
+    
 
+      </div>
+      <footer  >
+        {
+          
+        }
+          <p>Md Ebrahim © 2021</p>
+        </footer>
 
 
 

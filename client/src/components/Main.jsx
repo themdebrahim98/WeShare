@@ -5,6 +5,10 @@ import axios from 'axios'
 
 
 
+
+
+
+
 export default function Main() {
 
 
@@ -22,7 +26,7 @@ export default function Main() {
 
   const generateId = async () => {
 
-    const res = await axios.get('http://localhost:5000/api/generateId');
+    const res = await axios.get(`http://${window.location.host/api/generateId`);
 
     setFetchId(res.data);
 

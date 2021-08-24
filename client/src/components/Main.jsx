@@ -3,11 +3,16 @@ import './main.css'
 import axios from 'axios'
 
 
+const createApiurl = () => {
+
+  let hostname = window.location.host;
+  if(hostname){
+
+  }
 
 
 
-
-
+}
 
 export default function Main() {
 
@@ -26,7 +31,7 @@ export default function Main() {
 
   const generateId = async () => {
 
-    const res = await axios.get(`http://${window.location.host/api/generateId`);
+    const res = await axios.get(`http://${window.Location.host}/api/generateId`);
 
     setFetchId(res.data);
 
@@ -49,7 +54,7 @@ export default function Main() {
 
     setTimoutId = setTimeout(async function fn() {
 
-      const res = await axios.get(`http://localhost:5000/api/checkData/${fetchId.id}`);
+      const res = await axios.get(`http://${window.location.host}/api/checkData/${fetchId.id}`);
 
       let newRecievedData = [...recievedDataRef, ...res.data.recieveData];
       setRecievedData(newRecievedData);
@@ -131,7 +136,7 @@ export default function Main() {
     const { id, inputText: inputdata } = store;
     // let inputdata = inputText;
     console.log(store, "store");
-    const res = await axios.post('http://localhost:5000/api/sendData', {
+    const res = await axios.post(`http://${window.location.host}/api/sendData`, {
       id,
       inputdata
     });

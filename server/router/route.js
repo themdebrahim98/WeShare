@@ -1,9 +1,10 @@
-const { Router, json } = require("express");
+const { Router, json, text } = require("express");
 const router = Router();
 
+const fs = require('fs')
 
 
-const map1 = new Map();
+let map1 = new Map();
 let clientIdCounter = 100;
 
 
@@ -11,9 +12,9 @@ let clientIdCounter = 100;
 
 
 router.get('/generateId', (req, res) => {
- const id = clientIdCounter ;
+    const id = clientIdCounter;
 
- clientIdCounter++;
+    clientIdCounter++;
 
     res.json({
         id: id
@@ -23,12 +24,46 @@ router.get('/generateId', (req, res) => {
 
 
 router.post('/sendData', (req, res) => {
-    const { inputdata, id } = req.body;
-    if (map1.has(id)) {
-        map1.set(id, [...map1.get(id),inputdata]);
+    let { inputdata, id } = req.body;
+    id = Number(id)
+
+    // console.log(map1)
+
+
+    if (map1.has(id) ) {
+        // map1.set(id, [...map1.get(id), inputdata]);
+        let hasmap1PreviousTextProperty = map1.get(id).hasOwnProperty('text');
+        if(hasmap1PreviousTextProperty){
+
+            map1.set(id, {
+                ...map1.get(id),
+                text: [...map1.get(id).text, inputdata],
+    
+    
+            });
+
+        }else{
+            map1.set(id, {
+                ...map1.get(id),
+                text: [inputdata]
+    
+    
+            });
+
+        }
+
+
+
     } else {
 
-        map1.set(id, [inputdata]);
+        // map1.set(id, [inputdata]);
+        map1.set(id, {
+            ...map1.get(id),
+            text: [inputdata]
+
+
+        });
+
 
     }
 
@@ -36,10 +71,60 @@ router.post('/sendData', (req, res) => {
         inputdata,
         id
     })
-    console.log(inputdata,id)
+
+    console.log(map1)
+
+
+
 
 
 });
+
+
+router.post('/uploadfile', (req, res) => {
+    let { file_name, file_size, file, id } = req.body;
+    let incomming_data = req.body;
+    id = Number(id)
+    console.log(id)
+
+    if (map1.has(id) ) {
+        let hasmap1PreviousFilesProperty = map1.get(id).hasOwnProperty('files');
+        if(hasmap1PreviousFilesProperty){
+
+            map1.set(id, {
+                ...map1.get(id),
+                files: [...map1.get(id).files, {file_name,file_size,file}]
+    
+            });
+
+        }else{
+            map1.set(id, {
+
+                ...map1.get(id),
+                files:[{file_name,file_size,file}]
+            });
+
+        }
+
+    } else {
+
+        map1.set(id, {
+
+            ...map1.get(id),
+            files: [{file_name,file_size,file}]
+        });
+
+    }
+
+    res.json(incomming_data)
+    console.log('upload call')
+
+
+
+
+
+})
+
 
 
 
@@ -47,30 +132,28 @@ router.post('/sendData', (req, res) => {
 
 
 router.get('/checkData/:id', (req, res) => {
-    const id = req.params.id
+    const id = Number(req.params.id)
     // console.log(map1.get(req.params.id), "outside");
     if (map1.has(id)) {
         let recieveData = map1.get(id);
         res.json({
             recieveData
         });
-        map1.set(id,[])
 
     } else {
 
         res.json({
-            recieveData: []
+            recieveData: {},
+            messege: 'not found'
         });
+        // map1.delete(id)
     }
 
    
 
-
-
-
-
-
 })
+
+
 
 
 

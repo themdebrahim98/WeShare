@@ -67,6 +67,8 @@
   font-size: 8px;
   font-weight: 300;
   border-radius: 4px;
+  display: block;
+  
 }
 
 .sendText textarea {
@@ -84,7 +86,7 @@
 }
 
 .recievedText {
-  /* display: none; */
+  display: none;
   overflow-y: scroll;
   overflow-x: hidden;
   word-break: break-all;
@@ -97,7 +99,41 @@
   border: 1px solid rgba(48, 46, 46, 0.2);
   font-size: 8px;
   font-weight: 300;
+  display: none;
 }
+.sendfile{
+  
+  overflow-x: hidden;
+  word-break: break-all;
+  color: rgb(87, 79, 79);
+  margin: auto;
+  height: 200px;
+  width: calc(100% - 100px);
+  background-color: whitesmoke;
+  padding: 25px;
+  border: 1px solid rgba(48, 46, 46, 0.2);
+  font-size: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  display: none;
+
+}
+
+.sendfile .icon{
+  display: block;
+  /* background: red; */
+  display: flex;
+  /* text-align: center; */
+  /* margin: 0 auto; */
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+
+
 .recievedText.show {
   display: block;
 }
@@ -175,3 +211,6 @@ footer {
   background: #ccc;
 
 }
+
+
+

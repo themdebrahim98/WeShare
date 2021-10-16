@@ -4,311 +4,390 @@ import axios from 'axios'
 import { FiFilePlus, FiDownload, FiCopy } from 'react-icons/fi';
 import { Base64 } from 'js-base64';
 
+//  import WebSocket from 'ws';
+
 
 
 export default function Main() {
 
 
 
-	const [fetchId, setFetchId] = useState({});
-	const [store, setStore] = useState({
-		id: undefined,
-		inputText: '',
+  const [fetchId, setFetchId] = useState({ id: '' });
+  const [store, setStore] = useState({
+    id: undefined,
+    inputText: '',
 
-	});
+  });
 
-	const [filestore, setFiletore] = useState('');
+  const [filestore, setFiletore] = useState('');
 
 
-	const [recievedData, setRecievedData] = useState({});
-	let recievedDataRef = { ...recievedData }
-	const inputref = useRef();
-	const [imgsrc, setimgsrc] = useState("");
-	const downloadRef = useRef()
+  const [recievedData, setRecievedData] = useState({
+    text: [],
+    files: []
+  });
+  let recievedDataRef = { ...recievedData }
+  const inputref = useRef();
+  const [imgsrc, setimgsrc] = useState("");
+  const downloadRef = useRef()
+  const wsRef = useRef()
 
 
 
 
-	const generateId = async () => {
+  // const generateId = async () => {
 
-		// const res = await axios.get(`${window.location.protocol}//${window.location.host}/api/generateId`);
-		const res = await axios.get(`http://localhost:5000/api/generateId`);
+  //   // const res = await axios.get(`${window.location.protocol}//${window.location.host}/api/generateId`);
+  //   const res = await axios.get(`http://localhost:5000/api/generateId`);
 
-		setFetchId(res.data);
+  //   setFetchId(res.data);
 
-	}
+  // }
 
-	useEffect(() => {
-		document.title = "Chats_App"
-		generateId()
 
+  const WebSocketConnection = () => {
+    const ws = new WebSocket('ws://localhost:5000/websocket/');
+    wsRef.current = ws;
+    ws.onopen = (e) => {
+      console.log('websocket server connected..');
 
-	}, []);
 
 
-	useEffect(() => {
-		let setTimoutId;
+      // ws.send('from dfbv fcxvb ')
 
+    }
 
-		setTimoutId = setTimeout(async function fn() {
+    ws.onmessage = (e) => {
+      let incommingData = JSON.parse(e.data);
+      console.log(incommingData, 'test')
 
-			// const res = await axios.get(`${window.location.protocol}//${window.location.host}/api/checkData/${fetchId.id}`);
-			const res = await axios.get(`http://localhost:5000/api/checkData/${fetchId.id}`);
+      if (incommingData.type === 'generateId') {
+        setFetchId(({ id: +(incommingData.id) }))
+      } else if (incommingData.type === 'clientData') {
+        console.log(incommingData);
+        setRecievedData(JSON.parse(incommingData.data))
 
+      }
+    }
+    ws.onclose = (e) => {
+      console.log('wesocket server disconnected')
+    }
+    ws.onerror = (e) => {
+      console.log('websocket error', e)
+    }
 
-			let newRecievedData = { ...recievedDataRef, ...res.data.recieveData };
-			setRecievedData(newRecievedData);
-			recievedDataRef = newRecievedData;
 
-			// let length = res.data.recieveData.length;
 
-			setTimoutId = setTimeout(fn, 5000);
 
 
-		}, 5000);
+  }
 
-		return () => {
-			clearTimeout(setTimoutId);
 
-		}
+  // useEffect(  () => {
+  //   document.title = "Chats_App"
+  //   generateId()
 
 
-	}, [fetchId]);
 
+  // }, []);
 
-	const showfiledBox = (n) => {
+  useEffect(() => {
+    WebSocketConnection()
 
+  }, [])
 
-		const allFiled = document.querySelectorAll('.dataContainer .filed');
 
-		for (let i = 0; i < allFiled.length; i++) {
-			allFiled[i].style.display = 'none'
-		}
 
-		allFiled[n].style.display = 'block'
-	}
 
 
-	const handleChange = (e, name) => {
-		let val = e.target.value;
-		setStore({
-			...store, [name]: val
-		})
+  // useEffect(() => {
+  //   let setTimoutId;
 
 
+  //   setTimoutId = setTimeout(async function fn() {
 
+  //     // const res = await axios.get(`${window.location.protocol}//${window.location.host}/api/checkData/${fetchId.id}`);
+  //     const res = await axios.get(`http://localhost:5000/api/checkData/${fetchId.id}`);
 
-	}
 
+  //     let newRecievedData = { ...recievedDataRef, ...res.data.recieveData };
+  //     setRecievedData(newRecievedData);
+  //     recievedDataRef = newRecievedData;
 
+  //     // let length = res.data.recieveData.length;
 
-	const handleSubmit = async (e) => {
-		e.preventDefault();
-		let { id, inputText: inputdata } = store;
+  //     setTimoutId = setTimeout(fn, 5000);
 
-		// let inputdata = inputText;
-		if (store.inputText !== null && store.inputText != '') {
 
-			const res = await axios.post(`http://localhost:5000/api/sendData`, {
-				id,
-				inputdata
-			});
-			console.log(res.data)
-			setStore({ ...store, inputText: '' })
-		}
+  //   }, 5000);
 
-		if (filestore !== '') {
+  //   return () => {
+  //     clearTimeout(setTimoutId);
 
-			const res2 = await axios.post('http://localhost:5000/api/uploadfile', filestore);
-			setFiletore('');
-			inputref.current.value = ""
+  //   }
 
-			console.log(res2.data);
-		}
 
+  // }, [fetchId]);
 
+  const handleSubmit = () => {
+    console.log('submit')
+    let storeData = JSON.stringify({
+      data: store,
+      type: 'inputText'
+    })
+    wsRef.current.send(storeData);
+    setStore({ ...store, inputText: '' });
 
-	}
 
+    if (filestore !== '') {
+      let inputFileData = JSON.stringify({
+        data: filestore,
+        type: 'inputFileData'
+      })
 
-	const fileChoose = () => {
+      wsRef.current.send(inputFileData)
+      setFiletore('');
+      inputref.current.value = ""
 
-		inputref.onChange()
-	}
 
-	useEffect(() => {
-		if(filestore){
+    }
+  }
 
-			setFiletore({ ...filestore, id: store.id })
-		}
 
-	}, [store.id])
+  const showfiledBox = (n) => {
 
 
+    const allFiled = document.querySelectorAll('.dataContainer .filed');
 
-	const arrayBufferToBase64 = async () => {
-		let selected_file = inputref.current.files[0];
-		const arraybuffertoInt8 = new Uint8Array(await selected_file.arrayBuffer())
-		const base64_sellected_file = Base64.fromUint8Array(arraybuffertoInt8);
-		let id = Number(store.id);
-		setFiletore({
-			id: id,
-			file_name: selected_file.name,
-			file_size: selected_file.size,
-			file: base64_sellected_file,
+    for (let i = 0; i < allFiled.length; i++) {
+      allFiled[i].style.display = 'none'
+    }
 
+    allFiled[n].style.display = 'block'
+  }
 
-		})
 
-	}
+  const handleChange = (e, name) => {
+    let val = e.target.value;
+    setStore({
+      ...store, [name]: val
+    })
 
 
-	const bse64toFileUrl = (base64String,) => {
-		let base64toUint8Array = Base64.toUint8Array(base64String);
-		let blob = new Blob([base64toUint8Array])
 
-		downloadRef.current.href = URL.createObjectURL(blob)
-		console.log(URL.createObjectURL(blob, 'url'))
-		console.log(downloadRef.current)
 
-	}
+  }
 
 
 
-	return (
-		<>
-			{
-				console.log(recievedData)
-			}
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   let { id, inputText: inputdata } = store;
 
-			<div className="wrapper">
-				<div className="container">
+  //   // let inputdata = inputText;
+  //   if (store.inputText !== null && store.inputText != '') {
 
-					<p>MY ID <span>{fetchId.id}</span></p>
+  //     const res = await axios.post(`http://localhost:5000/api/sendData`, {
+  //       id,
+  //       inputdata
+  //     });
+  //     console.log(res.data)
+  //     setStore({ ...store, inputText: '' })
+  //   }
 
+  //   if (filestore !== '') {
 
-					<div className="lists">
-						<div>
-							<p className="list" onClick={() => { showfiledBox(0) }}> send Text</p>
-						</div>
-						<div>
-							<p className="list" onClick={() => { showfiledBox(1) }}>send file</p>
-						</div>
-						<div>
-							<p className="list" onClick={() => { showfiledBox(2) }}>Recieved Text</p>
-						</div>
+  //     const res2 = await axios.post('http://localhost:5000/api/uploadfile', filestore);
+  //     setFiletore('');
+  //     inputref.current.value = ""
 
+  //     console.log(res2.data);
+  //   }
 
-					</div>
-					<div className="dataContainer">
 
-						<div className="sendText filed ">
-							<form action="">
-								<textarea value={store.inputText} name="inputText" id="" style={{ width: "100%", height: "150px" }} onChange={(e) => handleChange(e, 'inputText')}  >
-								</textarea>
-							</form>
-						</div>
 
-						<div className="sendfile filed ">
-							<div className="icon">
-								<FiFilePlus onClick={fileChoose} className="fileIcon" />
-								<input type="file" multiple ref={inputref} onChange={arrayBufferToBase64} />
+  // }
 
 
-							</div>
+  const fileChoose = () => {
 
-						</div>
+    inputref.onChange()
+  }
 
-						<div className="recievedText filed ">
+  useEffect(() => {
+    if (filestore) {
 
-							<h1 style={{ color: "blue" }}>All Text</h1>
+      setFiletore({ ...filestore, id: store.id })
+    }
 
 
-							{
+  }, [store.id])
 
-								recievedData.text ? recievedData.text.map((elm, index) =>
-									<>
 
-										<div key={index} className="texts" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-											<h1 >{elm}</h1>
-											<FiCopy style={{ fontSize: '25px', cursor: 'pointer' }} />
 
+  const arrayBufferToBase64 = async () => {
+    let selected_file = inputref.current.files[0];
+    const arraybuffertoInt8 = new Uint8Array(await selected_file.arrayBuffer())
+    const base64_sellected_file = Base64.fromUint8Array(arraybuffertoInt8);
+    let id = Number(store.id);
+    setFiletore({
+      id: id,
+      file_name: selected_file.name,
+      file_size: selected_file.size,
+      file: base64_sellected_file,
 
-										</div>
 
-									</>
+    })
 
-								)
+  }
 
-									: null
 
+  const bse64toFileUrl = (base64String,) => {
+    let base64toUint8Array = Base64.toUint8Array(base64String);
+    let blob = new Blob([base64toUint8Array])
 
-							}
-							<h1 style={{ color: "blue" }}>All files</h1>
-							{
-								recievedData.files ? recievedData.files.map((elm, index) =>
+    downloadRef.current.href = URL.createObjectURL(blob)
+    console.log(URL.createObjectURL(blob, 'url'))
+    console.log(downloadRef.current)
 
+  }
 
-									<>
 
-										<div key={index} className="files" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 
-											<h1>
-												{elm.file_name}{elm.file_size}
+  return (
+    <>
+      {
+        console.log(recievedData.text, 'receved')
+      }
 
-											</h1>
-											<a ref={downloadRef} download={elm.file_name} href="#"><FiDownload onClick={() => { bse64toFileUrl(elm.file) }} style={{ fontSize: '25px' }} /></a>
+      <div className="wrapper">
+        <div className="container">
 
+          <p>MY ID <span>{fetchId.id}</span></p>
 
-										</div>
 
+          <div className="lists">
+            <div>
+              <p className="list" onClick={() => { showfiledBox(0) }}> send Text</p>
+            </div>
+            <div>
+              <p className="list" onClick={() => { showfiledBox(1) }}>send file</p>
+            </div>
+            <div>
+              <p className="list" onClick={() => { showfiledBox(2) }}>Recieved Text</p>
+            </div>
 
 
-									</>
+          </div>
+          <div className="dataContainer">
 
-								)
+            <div className="sendText filed ">
+              <form action="">
+                <textarea value={store.inputText} name="inputText" id="" style={{ width: "100%", height: "150px" }} onChange={(e) => handleChange(e, 'inputText')}  >
+                </textarea>
+              </form>
+            </div>
 
-									: null
-							}
+            <div className="sendfile filed ">
+              <div className="icon">
+                <FiFilePlus onClick={fileChoose} className="fileIcon" />
+                <input type="file" multiple ref={inputref} onChange={arrayBufferToBase64} />
 
-						</div>
 
+              </div>
 
-					</div>
+            </div>
 
-					<div className="recipientId">
-						<form action="">
-							<label htmlFor=""><button>Recipient Id</button> </label>
-							<input value={store.id} className="recipientData" type="text" name="recipientData" onChange={(e) => handleChange(e, 'id')} />
-						</form>
-					</div>
+            <div className="recievedText filed ">
 
-					<div className="send">
-						<button onClick={handleSubmit}>Send</button>
-					</div>
+              <h1 style={{ color: "blue" }}>All Text</h1>
 
+              {/* 
+              {
 
+                recievedData.text ? recievedData.text.map((elm, index) =>
+                  <>
 
+                    <div key={index} className="texts" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <h1 >{elm}</h1>
+                      <FiCopy style={{ fontSize: '25px', cursor: 'pointer' }} />
 
-				</div>
 
+                    </div>
 
+                  </>
 
-			</div>
-			<footer  >
-				{
+                )
 
-				}
-				<p>Md Ebrahim © 2021</p>
+                  : null
 
-			</footer>
 
+              }
+              <h1 style={{ color: "blue" }}>All files</h1>
+              {
+                recievedData.files ? recievedData.files.map((elm, index) =>
 
 
+                  <>
 
+                    <div key={index} className="files" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 
-		</>
-	)
+                      <h1>
+                        {elm.file_name}{elm.file_size}
+
+                      </h1>
+                      <a ref={downloadRef} download={elm.file_name} href="#"><FiDownload onClick={() => { bse64toFileUrl(elm.file) }} style={{ fontSize: '25px' }} /></a>
+
+
+                    </div>
+
+
+
+                  </>
+
+                )
+
+                  : null
+              } */}
+
+            </div>
+
+
+          </div>
+
+          <div className="recipientId">
+            <form action="">
+              <label htmlFor=""><button>Recipient Id</button> </label>
+              <input value={store.id} className="recipientData" type="text" name="recipientData" onChange={(e) => handleChange(e, 'id')} />
+            </form>
+          </div>
+
+          <div className="send">
+            <button onClick={handleSubmit}>Send</button>
+          </div>
+
+
+
+
+        </div>
+
+
+
+      </div>
+      <footer  >
+        {
+
+        }
+        <p>Md Ebrahim © 2021</p>
+
+      </footer>
+
+
+
+
+
+    </>
+  )
 }
 
 

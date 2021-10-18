@@ -1,0 +1,51 @@
+.text_wrapper{
+  display: grid;
+  grid-template-columns: auto auto;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.filecopy{
+  font-size: 25px;
+  color: rgb(24, 144, 255);
+  cursor: pointer;
+}
+.texts{
+  display: flex;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  color: rgb(39, 37, 37);
+}
+.texts p{
+margin: 0;
+padding: 0;
+}
+.texts .size{
+  color: rgb(95, 92, 92);
+  font-weight: 150;
+}
+.fileicon i{
+  margin: 0 8px 0 0;
+  color: rgb(24, 144, 255);
+  font-size: 25px;
+}
+.texts_right_side{
+  display: flex;
+}
+.texts_right_side .size{
+  font-size: 25px;
+}
+
+.textbreak p{
+  width: 96px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+    /* border: 1px solid #000000; */
+    /* height: 25px; */
+    text-overflow: ellipsis;
+    word-break: break-all;
+}

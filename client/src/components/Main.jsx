@@ -2,8 +2,12 @@ import React, { useState, useEffect, useRef } from 'react'
 import './main.css'
 import axios from 'axios'
 import { FiFilePlus, FiDownload, FiCopy } from 'react-icons/fi';
-import { Base64 } from 'js-base64';
+import { AiOutlineFileText } from 'react-icons/ai';
+import { VscInbox } from 'react-icons/vsc';
 
+import { Base64 } from 'js-base64';
+import { IncommingFiles } from './IncommingFiles';
+import { IncommingTexts } from './IncommingTexts';
 //  import WebSocket from 'ws';
 
 
@@ -14,7 +18,7 @@ export default function Main() {
 
   const [fetchId, setFetchId] = useState({ id: '' });
   const [store, setStore] = useState({
-    id: undefined,
+    id: '',
     inputText: '',
 
   });
@@ -24,7 +28,8 @@ export default function Main() {
 
   const [recievedData, setRecievedData] = useState({
     text: [],
-    files: []
+    files: [],
+
   });
   let recievedDataRef = { ...recievedData }
   const inputref = useRef();
@@ -32,18 +37,7 @@ export default function Main() {
   const downloadRef = useRef()
   const wsRef = useRef()
 
-
-
-
-  // const generateId = async () => {
-
-  //   // const res = await axios.get(`${window.location.protocol}//${window.location.host}/api/generateId`);
-  //   const res = await axios.get(`http://localhost:5000/api/generateId`);
-
-  //   setFetchId(res.data);
-
-  // }
-
+  const btnRef = useRef()
 
   const WebSocketConnection = () => {
     const ws = new WebSocket('ws://localhost:5000/websocket/');
@@ -51,26 +45,32 @@ export default function Main() {
     ws.onopen = (e) => {
       console.log('websocket server connected..');
 
-
-
-      // ws.send('from dfbv fcxvb ')
-
     }
 
     ws.onmessage = (e) => {
       let incommingData = JSON.parse(e.data);
-      console.log(incommingData, 'test')
 
       if (incommingData.type === 'generateId') {
         setFetchId(({ id: +(incommingData.id) }))
       } else if (incommingData.type === 'clientData') {
-        console.log(incommingData);
-        setRecievedData(JSON.parse(incommingData.data))
+        console.log(incommingData.data, 'test');
+        let newRecievedData = { ...recievedDataRef, text: [...recievedDataRef.text, incommingData.data] };
+        setRecievedData(newRecievedData);
+        recievedDataRef = newRecievedData;
+        showfiledBox(2)
+      } else if (incommingData.type === 'inputFileData') {
+        let newRecievedData = { ...recievedDataRef, files: [...recievedDataRef.files, incommingData.data] };
+        setRecievedData(newRecievedData);
+        recievedDataRef = newRecievedData;
+        showfiledBox(2)
 
       }
     }
     ws.onclose = (e) => {
-      console.log('wesocket server disconnected')
+      console.log('websocket server disconnected');
+      ws.send(`${ws.id}`)
+
+
     }
     ws.onerror = (e) => {
       console.log('websocket error', e)
@@ -83,63 +83,39 @@ export default function Main() {
   }
 
 
-  // useEffect(  () => {
-  //   document.title = "Chats_App"
-  //   generateId()
-
-
-
-  // }, []);
-
   useEffect(() => {
-    WebSocketConnection()
+    WebSocketConnection();
+
 
   }, [])
 
 
 
 
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (store.inputText != '') {
 
-  // useEffect(() => {
-  //   let setTimoutId;
+      let storeData = JSON.stringify({
 
+        data: {
+          ...store,
+          fromid: fetchId.id
 
-  //   setTimoutId = setTimeout(async function fn() {
+        },
+        type: 'inputText'
+      })
 
-  //     // const res = await axios.get(`${window.location.protocol}//${window.location.host}/api/checkData/${fetchId.id}`);
-  //     const res = await axios.get(`http://localhost:5000/api/checkData/${fetchId.id}`);
-
-
-  //     let newRecievedData = { ...recievedDataRef, ...res.data.recieveData };
-  //     setRecievedData(newRecievedData);
-  //     recievedDataRef = newRecievedData;
-
-  //     // let length = res.data.recieveData.length;
-
-  //     setTimoutId = setTimeout(fn, 5000);
-
-
-  //   }, 5000);
-
-  //   return () => {
-  //     clearTimeout(setTimoutId);
-
-  //   }
+      wsRef.current.send(storeData);
+      setStore({ ...store, inputText: '' })
+    }
 
 
-  // }, [fetchId]);
+    let fileSizeinByte = filestore.file_size;
+    let fileSizeinKb = (fileSizeinByte / 1000);
+    console.log(fileSizeinKb, 'fileSizeinKb')
 
-  const handleSubmit = () => {
-    console.log('submit')
-    let storeData = JSON.stringify({
-      data: store,
-      type: 'inputText'
-    })
-    wsRef.current.send(storeData);
-    setStore({ ...store, inputText: '' });
-
-
-    if (filestore !== '') {
+    if (filestore !== '' && fileSizeinKb <= 30000 && store.id !== '') {
       let inputFileData = JSON.stringify({
         data: filestore,
         type: 'inputFileData'
@@ -150,19 +126,26 @@ export default function Main() {
       inputref.current.value = ""
 
 
+    } else if (store.id === '') {
+      e.preventDefault()
+      alert('plase enter te recepant id')
     }
   }
 
 
   const showfiledBox = (n) => {
-
-
     const allFiled = document.querySelectorAll('.dataContainer .filed');
-
+    const allLists = document.querySelectorAll('.list');
     for (let i = 0; i < allFiled.length; i++) {
       allFiled[i].style.display = 'none'
     }
+    for (let j = 0; j < allLists.length; j++) {
+      allLists[j].style.color = 'black'
+      allLists[j].style.borderBottom = '';
 
+    }
+    allLists[n].style.color = 'rgb(24, 144, 255)';
+    allLists[n].style.borderBottom = '3px solid rgb(24, 144, 255)';
     allFiled[n].style.display = 'block'
   }
 
@@ -179,39 +162,10 @@ export default function Main() {
   }
 
 
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   let { id, inputText: inputdata } = store;
-
-  //   // let inputdata = inputText;
-  //   if (store.inputText !== null && store.inputText != '') {
-
-  //     const res = await axios.post(`http://localhost:5000/api/sendData`, {
-  //       id,
-  //       inputdata
-  //     });
-  //     console.log(res.data)
-  //     setStore({ ...store, inputText: '' })
-  //   }
-
-  //   if (filestore !== '') {
-
-  //     const res2 = await axios.post('http://localhost:5000/api/uploadfile', filestore);
-  //     setFiletore('');
-  //     inputref.current.value = ""
-
-  //     console.log(res2.data);
-  //   }
-
-
-
-  // }
-
-
   const fileChoose = () => {
 
-    inputref.onChange()
+    inputref.current.click();
+
   }
 
   useEffect(() => {
@@ -230,8 +184,10 @@ export default function Main() {
     const arraybuffertoInt8 = new Uint8Array(await selected_file.arrayBuffer())
     const base64_sellected_file = Base64.fromUint8Array(arraybuffertoInt8);
     let id = Number(store.id);
+    let fromid = Number(fetchId.id)
     setFiletore({
       id: id,
+      fromid: fromid,
       file_name: selected_file.name,
       file_size: selected_file.size,
       file: base64_sellected_file,
@@ -242,7 +198,7 @@ export default function Main() {
   }
 
 
-  const bse64toFileUrl = (base64String,) => {
+  const bse64toFileUrl = (base64String) => {
     let base64toUint8Array = Base64.toUint8Array(base64String);
     let blob = new Blob([base64toUint8Array])
 
@@ -283,72 +239,33 @@ export default function Main() {
 
             <div className="sendText filed ">
               <form action="">
-                <textarea value={store.inputText} name="inputText" id="" style={{ width: "100%", height: "150px" }} onChange={(e) => handleChange(e, 'inputText')}  >
+                <textarea value={store.inputText} placeholder="paste or write your text to send" name="inputText" id="" style={{ width: "100%", height: "200px" }} onChange={(e) => handleChange(e, 'inputText')}  rows="200" >
                 </textarea>
               </form>
             </div>
 
             <div className="sendfile filed ">
               <div className="icon">
-                <FiFilePlus onClick={fileChoose} className="fileIcon" />
-                <input type="file" multiple ref={inputref} onChange={arrayBufferToBase64} />
+                <div style={{ display: 'flex', flexDirection: 'column',justifyContent:'center',alignItems:'center' }}>
+                  <VscInbox onClick={fileChoose} className="fileIcon" />
+                  <p style={{fontSize:'25px'}}>Click this to send the file</p>
+
+                </div>
 
 
               </div>
 
+              <input type="file" multiple style={{ display: 'none' }} ref={inputref} onChange={arrayBufferToBase64} />
             </div>
 
             <div className="recievedText filed ">
+              <IncommingTexts recievedData={recievedData} />
+              <IncommingFiles
+                downloadRef={downloadRef}
+                recievedData={recievedData}
+                bse64toFileUrl={bse64toFileUrl}
+              />
 
-              <h1 style={{ color: "blue" }}>All Text</h1>
-
-              {/* 
-              {
-
-                recievedData.text ? recievedData.text.map((elm, index) =>
-                  <>
-
-                    <div key={index} className="texts" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <h1 >{elm}</h1>
-                      <FiCopy style={{ fontSize: '25px', cursor: 'pointer' }} />
-
-
-                    </div>
-
-                  </>
-
-                )
-
-                  : null
-
-
-              }
-              <h1 style={{ color: "blue" }}>All files</h1>
-              {
-                recievedData.files ? recievedData.files.map((elm, index) =>
-
-
-                  <>
-
-                    <div key={index} className="files" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-
-                      <h1>
-                        {elm.file_name}{elm.file_size}
-
-                      </h1>
-                      <a ref={downloadRef} download={elm.file_name} href="#"><FiDownload onClick={() => { bse64toFileUrl(elm.file) }} style={{ fontSize: '25px' }} /></a>
-
-
-                    </div>
-
-
-
-                  </>
-
-                )
-
-                  : null
-              } */}
 
             </div>
 
@@ -357,8 +274,8 @@ export default function Main() {
 
           <div className="recipientId">
             <form action="">
-              <label htmlFor=""><button>Recipient Id</button> </label>
-              <input value={store.id} className="recipientData" type="text" name="recipientData" onChange={(e) => handleChange(e, 'id')} />
+              <label htmlFor="recipientid"><button>Recipient Id</button> </label>
+              <input value={store.id} placeholder="Enter Recipient Id" id="recipientid" className="recipientData" type="text" name="recipientData" onChange={(e) => handleChange(e, 'id')} />
             </form>
           </div>
 
@@ -371,15 +288,10 @@ export default function Main() {
 
         </div>
 
-
-
       </div>
+
       <footer  >
-        {
-
-        }
         <p>Md Ebrahim © 2021</p>
-
       </footer>
 
 
@@ -394,4 +306,3 @@ export default function Main() {
 
 
 
-<h2>efvrsrgvwg</h2>

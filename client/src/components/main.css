@@ -4,6 +4,9 @@
   box-sizing: border-box;
 }
 
+body{
+  background: linear-gradient(45deg,#74ebd5,#ACB6E5);
+}
 
 .wrapper {
   width: 100%;
@@ -17,7 +20,7 @@
 .container {
   margin-top: 5%;
   width: 700px;
-  height: 500px;
+  height: 540px;
   border: 1px solid #d9d9d9;
   border-radius: 15px;
 }
@@ -30,13 +33,18 @@
   margin-top: 15px;
   align-items: center;
   justify-content: center;
+  margin-bottom: 7px;
 }
+
 .list {
   margin: 15px;
   text-transform: capitalize;
   color: rgb(75, 67, 67);
   position: relative;
   cursor: pointer;
+}
+.list:hover{
+  color: #1890ff;
 }
 
 .container span {
@@ -59,16 +67,16 @@
 .sendText {
   word-break: break-all;
   color: rgb(87, 79, 79);
-  margin: auto;
+  margin: 0 24px;
   height: 240px;
-  width: calc(100% - 100px);
+  width: calc(100% - 50px);
   /* padding: 25px; */
   border: 1px solid rgba(48, 46, 46, 0.2);
   font-size: 8px;
   font-weight: 300;
   border-radius: 4px;
   display: block;
-  background: rgba(24, 144, 255, 0.2);
+
   
 }
 
@@ -80,7 +88,7 @@
   line-height: 15px;
   border-radius: 4px;
   border: 1px solid rgba(48, 46, 46, 0.2);
-  background: rgba(24, 144, 255, 0.2);
+  /* background: rgba(24, 144, 255, 0.2); */
 }
 .sendText textarea:hover {
   border: 1px solid blue;
@@ -93,24 +101,25 @@
   overflow-x: hidden;
   word-break: break-all;
   color: rgb(87, 79, 79);
-  margin: auto;
+  margin: 0 24px;
   height: 240px;
-  width: calc(100% - 100px);
-  background: rgba(24, 144, 255, 0.2);
+  width: calc(100% - 50px);
+  /* background: rgba(24, 144, 255, 0.2); */
   padding: 25px;
   border: 1px solid rgba(48, 46, 46, 0.2);
   font-size: 8px;
   font-weight: 300;
   display: none;
+  background: white;
 }
 .sendfile{
   
   overflow-x: hidden;
   word-break: break-all;
   color: rgb(87, 79, 79);
-  margin: auto;
+  margin: 0 24px;
   height: 240px;
-  width: calc(100% - 100px);
+  width: calc(100% - 50px);
   background-color: whitesmoke;
   padding: 25px;
   border: 1px solid rgba(48, 46, 46, 0.2);
@@ -118,7 +127,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(24, 144, 255,0.2);
+  /* background-color: rgba(24, 144, 255,0.2); */
   display: none;
 
 }
@@ -145,6 +154,10 @@
   display: block;
   background-color: whitesmoke;
 }
+.lists .list{
+  font-size: 25px;
+  font-weight: 600;
+}
 
 .lists .list::before {
   display: none;
@@ -165,8 +178,11 @@
 }
 
 .recipientId {
-  margin-left: 50px;
+  
   margin-top: 50px;
+}
+.recipientId form{
+  text-align: center;
 }
 .recipientId label button {
   color: rgb(109, 104, 104);
@@ -255,3 +271,11 @@ footer {
 
 
 
+
+@media screen and (max-width:500px) {
+
+  .lists .list{
+    font-size: 15px;
+  }
+  
+}

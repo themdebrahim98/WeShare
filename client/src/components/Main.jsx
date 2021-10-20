@@ -192,6 +192,7 @@ export default function Main() {
     }
     allLists[n].style.color = 'rgb(24, 144, 255)';
     allLists[n].style.borderBottom = '3px solid rgb(24, 144, 255)';
+    allLists[n].style.transition = 'color .2s ease-in'
     allFiled[n].style.display = 'block'
   }
 
@@ -285,7 +286,7 @@ export default function Main() {
 
             <div className="sendText filed ">
               <form action="">
-                <textarea value={store.inputText} placeholder="paste or write your text to send" name="inputText" id="" style={{ width: "100%", height: "200px" }} onChange={(e) => handleChange(e, 'inputText')} rows="240" >
+                <textarea value={store.inputText} placeholder="paste or write your text to send" name="inputText" id="" style={{ width: "100%", height: "240px" }} onChange={(e) => handleChange(e, 'inputText')} rows="240" >
                 </textarea>
               </form>
             </div>

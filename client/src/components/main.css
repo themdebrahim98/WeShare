@@ -60,15 +60,15 @@
   word-break: break-all;
   color: rgb(87, 79, 79);
   margin: auto;
-  height: 200px;
+  height: 240px;
   width: calc(100% - 100px);
-  background-color: whitesmoke;
   /* padding: 25px; */
   border: 1px solid rgba(48, 46, 46, 0.2);
   font-size: 8px;
   font-weight: 300;
   border-radius: 4px;
   display: block;
+  background: rgba(24, 144, 255, 0.2);
   
 }
 
@@ -80,6 +80,7 @@
   line-height: 15px;
   border-radius: 4px;
   border: 1px solid rgba(48, 46, 46, 0.2);
+  background: rgba(24, 144, 255, 0.2);
 }
 .sendText textarea:hover {
   border: 1px solid blue;
@@ -93,7 +94,7 @@
   word-break: break-all;
   color: rgb(87, 79, 79);
   margin: auto;
-  height: 200px;
+  height: 240px;
   width: calc(100% - 100px);
   background: rgba(24, 144, 255, 0.2);
   padding: 25px;
@@ -108,7 +109,7 @@
   word-break: break-all;
   color: rgb(87, 79, 79);
   margin: auto;
-  height: 200px;
+  height: 240px;
   width: calc(100% - 100px);
   background-color: whitesmoke;
   padding: 25px;
@@ -192,7 +193,11 @@
   border: none;
   cursor: pointer;
   border-radius: 4px;
-  width: 100px;
+  width: 147px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
 }
 .send button:hover {
   background-color: rgba(10, 98, 231, 0.8);
@@ -204,6 +209,40 @@
   margin-top: 15px;
 }
 
+.send .sending{
+  color: white;
+  font-size: 20px;
+  margin-left: 10px;
+  text-transform: capitalize;
+  letter-spacing: 1px;
+  
+
+}
+
+@keyframes spinner {
+  0% {
+    transform: translate3d(-50%, -50%, 0) rotate(0deg);
+  }
+  100% {
+    transform: translate3d(-50%, -50%, 0) rotate(360deg);
+  }
+}
+.spin::before {
+  animation: 1.5s linear infinite spinner;
+  animation-play-state: inherit;
+  border: solid 5px #cfd0d1;
+  border-bottom-color: rgb(194 204 212 / 20%);
+  border-radius: 50%;
+  content: "";
+  height: 16px;
+  width: 16px;
+  position: absolute;
+  /* top: 10%; */
+  font-size: 11px;
+  /* left: 10%; */
+  transform: translate3d(-50%, -50%, 0);
+  will-change: transform;
+}
 footer {
   height: 20vh;
   display: flex;

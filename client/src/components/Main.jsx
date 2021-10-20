@@ -1,19 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, Children } from 'react'
 import './main.css'
-import axios from 'axios'
-import { FiFilePlus, FiDownload, FiCopy } from 'react-icons/fi';
-import { AiOutlineFileText } from 'react-icons/ai';
 import { VscInbox } from 'react-icons/vsc';
 
 import { Base64 } from 'js-base64';
 import { IncommingFiles } from './IncommingFiles';
 import { IncommingTexts } from './IncommingTexts';
+import { ImSpinner9 } from 'react-icons/im';
+
 //  import WebSocket from 'ws';
 
 
 
 export default function Main() {
 
+
+  let ishttps;
+  let hostname;
+  if (window.location.protocol === 'https:') {
+    ishttps = 'wss:'
+    hostname = window.location.hostname;
+  } else if (window.location.protocol === 'http:') {
+    ishttps = 'ws:';
+    hostname = window.location.host;
+  }
 
 
   const [fetchId, setFetchId] = useState({ id: '' });
@@ -33,17 +42,29 @@ export default function Main() {
   });
   let recievedDataRef = { ...recievedData }
   const inputref = useRef();
-  const [imgsrc, setimgsrc] = useState("");
   const downloadRef = useRef()
   const wsRef = useRef()
+  const [issend, setIssend] = useState(true)
 
-  const btnRef = useRef()
 
   const WebSocketConnection = () => {
-    const ws = new WebSocket('ws://localhost:5000/websocket/');
+    let url = `${ishttps}//${hostname}/websocket/`
+    let url2 = `ws://localhost:5000/websocket/`
+    console.log(url)
+
+    let ws = new WebSocket(url2);
     wsRef.current = ws;
     ws.onopen = (e) => {
       console.log('websocket server connected..');
+      setInterval(() => {
+        ws.send(JSON.stringify(
+          {
+
+            type: 'pingpong',
+            data: 'ping',
+          }
+        ))
+      }, 5000);
 
     }
 
@@ -56,15 +77,46 @@ export default function Main() {
         console.log(incommingData.data, 'test');
         let newRecievedData = { ...recievedDataRef, text: [...recievedDataRef.text, incommingData.data] };
         setRecievedData(newRecievedData);
+        alert('Data Recieving...')
         recievedDataRef = newRecievedData;
+        // recieved status send to client
+        ws.send(JSON.stringify({
+          data: {
+            toclientid: incommingData.data.fromid,
+            status: true
+          },
+          type: 'isrecieved',
+
+
+        }))
         showfiledBox(2)
       } else if (incommingData.type === 'inputFileData') {
         let newRecievedData = { ...recievedDataRef, files: [...recievedDataRef.files, incommingData.data] };
+        alert('Data Recieving...')
+
         setRecievedData(newRecievedData);
         recievedDataRef = newRecievedData;
-        showfiledBox(2)
+        showfiledBox(2);
+        ws.send(JSON.stringify({
+          data: {
+            toclientid: incommingData.data.fromid,
+            status: true
+          },
+          type: 'isrecieved',
+
+
+        }))
+
+
+      } else if (incommingData.type === 'isrecieved') {
+        setIssend(incommingData.data.status);
+
 
       }
+
+
+
+
     }
     ws.onclose = (e) => {
       console.log('websocket server disconnected');
@@ -85,8 +137,6 @@ export default function Main() {
 
   useEffect(() => {
     WebSocketConnection();
-
-
   }, [])
 
 
@@ -94,10 +144,11 @@ export default function Main() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (store.inputText != '') {
-
+    let fileSizeinByte = filestore.file_size;
+    let fileSizeinKb = (fileSizeinByte / 1000);
+    console.log(fileSizeinKb, 'fileSizeinKb')
+    if (store.inputText !== '' && store.id !== '') {
       let storeData = JSON.stringify({
-
         data: {
           ...store,
           fromid: fetchId.id
@@ -105,17 +156,10 @@ export default function Main() {
         },
         type: 'inputText'
       })
-
       wsRef.current.send(storeData);
+      setIssend(false)
       setStore({ ...store, inputText: '' })
-    }
-
-
-    let fileSizeinByte = filestore.file_size;
-    let fileSizeinKb = (fileSizeinByte / 1000);
-    console.log(fileSizeinKb, 'fileSizeinKb')
-
-    if (filestore !== '' && fileSizeinKb <= 30000 && store.id !== '') {
+    } else if (filestore !== '' && fileSizeinKb <= 30000 && store.id !== '') {
       let inputFileData = JSON.stringify({
         data: filestore,
         type: 'inputFileData'
@@ -124,9 +168,11 @@ export default function Main() {
       wsRef.current.send(inputFileData)
       setFiletore('');
       inputref.current.value = ""
+      setIssend(false)
 
 
-    } else if (store.id === '') {
+
+    } else {
       e.preventDefault()
       alert('plase enter te recepant id')
     }
@@ -239,21 +285,22 @@ export default function Main() {
 
             <div className="sendText filed ">
               <form action="">
-                <textarea value={store.inputText} placeholder="paste or write your text to send" name="inputText" id="" style={{ width: "100%", height: "200px" }} onChange={(e) => handleChange(e, 'inputText')}  rows="200" >
+                <textarea value={store.inputText} placeholder="paste or write your text to send" name="inputText" id="" style={{ width: "100%", height: "200px" }} onChange={(e) => handleChange(e, 'inputText')} rows="240" >
                 </textarea>
               </form>
             </div>
 
             <div className="sendfile filed ">
               <div className="icon">
-                <div style={{ display: 'flex', flexDirection: 'column',justifyContent:'center',alignItems:'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                   <VscInbox onClick={fileChoose} className="fileIcon" />
-                  <p style={{fontSize:'25px'}}>Click this to send the file</p>
+                  <p style={{ fontSize: '25px' }}>Click this to send the file</p>
 
                 </div>
 
-
               </div>
+              <p style={{fontSize:'18px'}}>{filestore.file_name}</p>
+             
 
               <input type="file" multiple style={{ display: 'none' }} ref={inputref} onChange={arrayBufferToBase64} />
             </div>
@@ -280,7 +327,22 @@ export default function Main() {
           </div>
 
           <div className="send">
-            <button onClick={handleSubmit}>Send</button>
+            <button onClick={handleSubmit}>
+
+              {issend ?
+
+                "send"
+                :
+                <>
+
+                  <div class="spin"></div>
+                  <span className="sending ">sending..</span>
+
+                </>
+              }
+
+            </button>
+            {issend ? console.log('send') : console.log('sending')}
           </div>
 
 

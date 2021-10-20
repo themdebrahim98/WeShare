@@ -1,7 +1,4 @@
-import React, { useRef } from 'react'
-import { FiFilePlus, FiDownload, FiCopy } from 'react-icons/fi';
-import { AiOutlineFileText } from 'react-icons/ai';
-import { HiOutlineClipboardCopy } from 'react-icons/hi';
+import React from 'react'
 import { FileList } from './FileList'
 import './incommingFiles.css'
 

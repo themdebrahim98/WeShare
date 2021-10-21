@@ -38,6 +38,8 @@ wss.on('connection', function (ws) {
                     data: {
                         text: incommingSubmitedData.data.inputText,
                         fromid: incommingSubmitedData.data.fromid,
+                        text_size:incommingSubmitedData.data.text_size
+                        
                     },
                     type: 'clientData'
                 })

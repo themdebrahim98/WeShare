@@ -15,6 +15,7 @@ export function IncommingTexts({ recievedData }) {
                 recievedData.text ? recievedData.text.map((elm, index) =>
 
                     < TextList
+                        text_size ={elm.text_size}
                         text={elm.text}
                         fromid={elm.fromid}
                     />

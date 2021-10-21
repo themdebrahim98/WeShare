@@ -52,7 +52,7 @@ export default function Main() {
     let url2 = `ws://localhost:5000/websocket/`
     console.log(url)
 
-    let ws = new WebSocket(url);
+    let ws = new WebSocket(url2);
     wsRef.current = ws;
     ws.onopen = (e) => {
       console.log('websocket server connected..');
@@ -146,12 +146,15 @@ export default function Main() {
     e.preventDefault()
     let fileSizeinByte = filestore.file_size;
     let fileSizeinKb = (fileSizeinByte / 1000);
-    console.log(fileSizeinKb, 'fileSizeinKb')
+
     if (store.inputText !== '' && store.id !== '') {
+      let blob = new Blob([store.inputText]);
+      console.log(blob.size)
       let storeData = JSON.stringify({
         data: {
           ...store,
-          fromid: fetchId.id
+          fromid: fetchId.id,
+          text_size:blob.size
 
         },
         type: 'inputText'
@@ -246,13 +249,17 @@ export default function Main() {
 
 
   const bse64toFileUrl = (base64String) => {
+    alert("download start..")
     let base64toUint8Array = Base64.toUint8Array(base64String);
     let blob = new Blob([base64toUint8Array])
 
     downloadRef.current.href = URL.createObjectURL(blob)
+    downloadRef.current.onload = function() {
+      URL.revokeObjectURL( downloadRef.current.href);
+    }
     console.log(URL.createObjectURL(blob, 'url'))
     console.log(downloadRef.current)
-
+  
   }
 
 

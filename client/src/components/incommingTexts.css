@@ -36,7 +36,13 @@ padding: 0;
   display: flex;
 }
 .texts_right_side .size{
-  font-size: 25px;
+  font-size: 18px;
+    font-weight: 400;
+    border-right: 2px solid dimgray;
+    padding-right: 4px;
+    height: 26px;
+    background: #eee;
+
 }
 
 .textbreak p{

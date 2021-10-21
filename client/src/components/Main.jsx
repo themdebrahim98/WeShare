@@ -52,7 +52,7 @@ export default function Main() {
     let url2 = `ws://localhost:5000/websocket/`
     console.log(url)
 
-    let ws = new WebSocket(url2);
+    let ws = new WebSocket(url);
     wsRef.current = ws;
     ws.onopen = (e) => {
       console.log('websocket server connected..');

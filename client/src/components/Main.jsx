@@ -6,6 +6,7 @@ import { Base64 } from 'js-base64';
 import { IncommingFiles } from './IncommingFiles';
 import { IncommingTexts } from './IncommingTexts';
 import { ImSpinner9 } from 'react-icons/im';
+import CBOR from 'cbor-js'
 
 //  import WebSocket from 'ws';
 
@@ -52,7 +53,8 @@ export default function Main() {
     let url2 = `ws://localhost:5000/websocket/`
     console.log(url)
 
-    let ws = new WebSocket(url);
+    let ws = new WebSocket(url2);
+    ws.binaryType = 'arraybuffer'
     wsRef.current = ws;
     ws.onopen = (e) => {
       console.log('websocket server connected..');
@@ -69,50 +71,57 @@ export default function Main() {
     }
 
     ws.onmessage = (e) => {
-      let incommingData = JSON.parse(e.data);
+      if (e.data instanceof ArrayBuffer) {
 
-      if (incommingData.type === 'generateId') {
-        setFetchId(({ id: +(incommingData.id) }))
-      } else if (incommingData.type === 'clientData') {
-        console.log(incommingData.data, 'test');
-        let newRecievedData = { ...recievedDataRef, text: [...recievedDataRef.text, incommingData.data] };
-        setRecievedData(newRecievedData);
-        alert('Data Recieving...')
-        recievedDataRef = newRecievedData;
-        // recieved status send to client
-        ws.send(JSON.stringify({
-          data: {
-            toclientid: incommingData.data.fromid,
-            status: true
-          },
-          type: 'isrecieved',
+        console.log(CBOR.decode(e.data), 'data')
+      } else if (!(e.data instanceof ArrayBuffer)) {
+        let incommingData = JSON.parse(e.data);
 
 
-        }))
-        showfiledBox(2)
-      } else if (incommingData.type === 'inputFileData') {
-        let newRecievedData = { ...recievedDataRef, files: [...recievedDataRef.files, incommingData.data] };
-        alert('Data Recieving...')
-
-        setRecievedData(newRecievedData);
-        recievedDataRef = newRecievedData;
-        showfiledBox(2);
-        ws.send(JSON.stringify({
-          data: {
-            toclientid: incommingData.data.fromid,
-            status: true
-          },
-          type: 'isrecieved',
-
-
-        }))
+        if (incommingData.type === 'generateId') {
+          setFetchId(({ id: +(incommingData.id) }))
+        } else if (incommingData.type === 'clientData') {
+          console.log(incommingData.data, 'test');
+          let newRecievedData = { ...recievedDataRef, text: [...recievedDataRef.text, incommingData.data] };
+          setRecievedData(newRecievedData);
+          alert('Data Recieving...')
+          recievedDataRef = newRecievedData;
+          // recieved status send to client
+          ws.send(JSON.stringify({
+            data: {
+              toclientid: incommingData.data.fromid,
+              status: true
+            },
+            type: 'isrecieved',
 
 
-      } else if (incommingData.type === 'isrecieved') {
-        setIssend(incommingData.data.status);
+          }))
+          showfiledBox(2)
+        } else if (incommingData.type === 'inputFileData') {
+          let newRecievedData = { ...recievedDataRef, files: [...recievedDataRef.files, incommingData.data] };
+          alert('Data Recieving...')
+
+          setRecievedData(newRecievedData);
+          recievedDataRef = newRecievedData;
+          showfiledBox(2);
+          ws.send(JSON.stringify({
+            data: {
+              toclientid: incommingData.data.fromid,
+              status: true
+            },
+            type: 'isrecieved',
 
 
+          }))
+
+
+        } else if (incommingData.type === 'isrecieved') {
+          setIssend(incommingData.data.status);
+
+
+        }
       }
+
 
 
 
@@ -154,7 +163,7 @@ export default function Main() {
         data: {
           ...store,
           fromid: fetchId.id,
-          text_size:blob.size
+          text_size: blob.size
 
         },
         type: 'inputText'
@@ -254,12 +263,12 @@ export default function Main() {
     let blob = new Blob([base64toUint8Array])
 
     downloadRef.current.href = URL.createObjectURL(blob)
-    downloadRef.current.onload = function() {
-      URL.revokeObjectURL( downloadRef.current.href);
+    downloadRef.current.onload = function () {
+      URL.revokeObjectURL(downloadRef.current.href);
     }
     console.log(URL.createObjectURL(blob, 'url'))
     console.log(downloadRef.current)
-  
+
   }
 
 
@@ -307,8 +316,8 @@ export default function Main() {
                 </div>
 
               </div>
-              <p style={{fontSize:'18px'}}>{filestore.file_name}</p>
-             
+              <p style={{ fontSize: '18px' }}>{filestore.file_name}</p>
+
 
               <input type="file" multiple style={{ display: 'none' }} ref={inputref} onChange={arrayBufferToBase64} />
             </div>

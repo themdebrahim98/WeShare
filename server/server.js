@@ -35,7 +35,7 @@ wss.on('connection', function (ws) {
         type: 'generateId'
     });
 
-    console.log(gid,'gid');
+   
 
     ws.send(gid);
 
@@ -71,7 +71,7 @@ wss.on('connection', function (ws) {
             } else if (incommingSubmitedData.type === 'inputFileData') {
                 // console.log(incommingSubmitedData.file.byteLength);
                 if (map.has(+incommingSubmitedData.data.id)) {
-                    console.log('file truu')
+                   
                     client = map.get(+(incommingSubmitedData.data.id));
                     //for test
                     let obj = {
@@ -90,32 +90,15 @@ wss.on('connection', function (ws) {
                     console.log('check',+incommingSubmitedData.data.file_size)
                     let encode = CBOR.encodeOne(obj, {highWaterMark: Math.max(5*1024*1024, +incommingSubmitedData.data.file_size +2*1024 )})
                     // console.log(obj.data);
-                    console.log(encode, 'text');
+                   
                     CBOR.decodeFirst(encode,(err,object)=>{
                         if(err){
                             console.log('tag',err);
                             return;
                         }
-                        console.log(object,'decode')
+                        
                     })
-                    // let decode = CBOR.decode(encode)
-                    // console.log(encode, decode)
-
-
-                    // let file = new Uint8Array(incommingSubmitedData.data.file);
-                    // console.log(file)
-                    // let Data = CBOR.encode({
-                    //     data: {
-                    //         fromid: incommingSubmitedData.data.fromid,
-                    //         file_name: incommingSubmitedData.data.file_name,
-                    //         file_size: incommingSubmitedData.data.file_size,
-                    //         file:new Uint8Array(incommingSubmitedData.data.file)
-                    //     },
-                    //     type: 'inputFileData'
-                    // });
-                    //     console.log(Data)
-                    //    console.log(CBOR.decode(Data))
-                    // console.log(encode.byteLength);
+                   
                     client.send(encode);
                     // console.log(encode, 'text');
 

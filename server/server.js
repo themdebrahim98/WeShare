@@ -25,7 +25,7 @@ let clientIdCounter = 100;
 
 
 
-const wss = new WebSocketServer({ server, path: '/websocket/'})
+const wss = new WebSocketServer({ server, path: '/websocket/' })
 
 wss.on('connection', function (ws) {
     map.set(clientIdCounter, ws);
@@ -37,7 +37,7 @@ wss.on('connection', function (ws) {
     ws.send(gid);
 
     ws.on('message', (message) => {
-     
+
 
         CBOR.decodeFirst(message, (err, obj) => {
             if (err) {
@@ -45,7 +45,15 @@ wss.on('connection', function (ws) {
             }
 
             let incommingSubmitedData = obj;
+            console.log(incommingSubmitedData)
+            if (incommingSubmitedData.type === 'ping') {
+                let pongmessage = CBOR.encodeOne({
+                    type: 'pong',
+                    message: 'pong'
+                }, { highWaterMark: 1024 * 1024 });
+                ws.send(pongmessage);
 
+            }
             if (incommingSubmitedData.type === 'inputText') {
                 if (map.has(+incommingSubmitedData.data.id)) {
                     client = map.get(+(incommingSubmitedData.data.id));
@@ -64,7 +72,7 @@ wss.on('connection', function (ws) {
             } else if (incommingSubmitedData.type === 'inputFileData') {
                 // console.log(incommingSubmitedData.file.byteLength);
                 if (map.has(+incommingSubmitedData.data.id)) {
-                   
+
                     client = map.get(+(incommingSubmitedData.data.id));
                     //for test
                     let obj = {
@@ -74,16 +82,16 @@ wss.on('connection', function (ws) {
                             fromid: incommingSubmitedData.data.fromid,
                             file_name: incommingSubmitedData.data.file_name,
                             file_size: incommingSubmitedData.data.file_size,
-                            file: new Uint8Array( incommingSubmitedData.data.file)
+                            file: new Uint8Array(incommingSubmitedData.data.file)
                         },
-                        type:"inputFileData",
+                        type: "inputFileData",
 
 
                     }
-                    let encode = CBOR.encodeOne(obj, {highWaterMark: Math.max(5*1024*1024, +incommingSubmitedData.data.file_size +2*1024 )})
-                   
-                  
-                   
+                    let encode = CBOR.encodeOne(obj, { highWaterMark: Math.max(5 * 1024 * 1024, +incommingSubmitedData.data.file_size + 2 * 1024) })
+
+
+
                     client.send(encode);
 
 

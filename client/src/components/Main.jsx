@@ -57,15 +57,16 @@ export default function Main() {
 		wsRef.current = ws;
 		ws.onopen = (e) => {
 			console.log('websocket server connected..');
-			// setInterval(() => {
-			//   ws.send(JSON.stringify(
-			//     {
+			let pingmessage = CBOR.encode({
+				type: 'ping',
+				message: 'ping'
+			});
 
-			//       type: 'pingpong',
-			//       data: 'ping',
-			//     }
-			//   ))
-			// }, 5000);
+
+			setInterval(() => {
+
+				ws.send(pingmessage);
+			}, 5000);
 
 		}
 
@@ -73,6 +74,7 @@ export default function Main() {
 
 			let incommingData = CBOR.decode(e.data);
 
+			console.log(incommingData)
 
 			if (incommingData.type === 'generateId') {
 				setFetchId(({ id: +(incommingData.id) }))

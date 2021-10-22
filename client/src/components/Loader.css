@@ -1,0 +1,11 @@
+.loader{
+  position: absolute;
+  top: 10px;
+  right: 19px;
+  background: white;
+  padding: 2px 25px;
+  width: 220px;
+  border-radius: 10px;
+  height: 66px;
+
+}

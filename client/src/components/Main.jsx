@@ -7,6 +7,7 @@ import { IncommingFiles } from './IncommingFiles';
 import { IncommingTexts } from './IncommingTexts';
 import { ImSpinner9 } from 'react-icons/im';
 import CBOR from 'cbor-js'
+import Loader from './Loader';
 
 
 
@@ -44,7 +45,9 @@ export default function Main() {
 	const inputref = useRef();
 	const downloadRef = useRef()
 	const wsRef = useRef()
-	const [issend, setIssend] = useState(true)
+	const [issend, setIssend] = useState(true);
+	const [isloading, setIsloading] = useState(false)
+
 
 
 	const WebSocketConnection = () => {
@@ -73,16 +76,16 @@ export default function Main() {
 		ws.onmessage = (e) => {
 
 			let incommingData = CBOR.decode(e.data);
+			console.log(incommingData.message)
 
-			console.log(incommingData)
 
 			if (incommingData.type === 'generateId') {
 				setFetchId(({ id: +(incommingData.id) }))
 			} else if (incommingData.type === 'clientData') {
-				console.log(incommingData.data, 'test');
+				console.log(incommingData, 'test');
 				let newRecievedData = { ...recievedDataRef, text: [...recievedDataRef.text, incommingData.data] };
 				setRecievedData(newRecievedData);
-				alert('Data Recieving...')
+				// alert('Data Recieving...')
 				recievedDataRef = newRecievedData;
 				// recieved status send to client
 				ws.send(CBOR.encode({
@@ -97,7 +100,7 @@ export default function Main() {
 				showfiledBox(2)
 			} else if (incommingData.type === 'inputFileData') {
 				let newRecievedData = { ...recievedDataRef, files: [...recievedDataRef.files, incommingData.data] };
-				alert('Data Recieving...')
+				// alert('Data Recieving...')
 
 				setRecievedData(newRecievedData);
 				recievedDataRef = newRecievedData;
@@ -115,31 +118,33 @@ export default function Main() {
 
 			} else if (incommingData.type === 'isrecieved') {
 				setIssend(incommingData.data.status);
+				setIsloading(false)
 
+			} else if (incommingData.type === 'noclient') {
+				alert('this id not avalable');
+				setIssend(true)
 
-
-
-
-
+			}else if(incommingData.type==='loading'){
+				setIsloading(true)
 			}
 
-
-
-
-
-			ws.onclose = (e) => {
-				console.log('websocket server disconnected');
-				ws.send(`${ws.id}`)
-
-
-			}
-			ws.onerror = (e) => {
-				console.log('websocket error', e)
-			}
 
 		}
 
+
+		ws.onclose = (e) => {
+			console.log('websocket server disconnected');
+			ws.send(`${ws.id}`)
+
+
+		}
+		ws.onerror = (e) => {
+			console.log('websocket error', e)
+		}
+
 	}
+
+
 
 
 
@@ -281,6 +286,10 @@ export default function Main() {
 
 			<div className="wrapper">
 				<div className="container">
+					{
+						isloading?<Loader />:null
+					}
+					
 
 					<p>MY ID <span>{fetchId.id}</span></p>
 
@@ -359,7 +368,7 @@ export default function Main() {
 							}
 
 						</button>
-						{issend ? console.log('send') : console.log('sending')}
+						{/* {issend ? console.log('send') : console.log('sending')} */}
 					</div>
 
 

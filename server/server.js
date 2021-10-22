@@ -5,6 +5,12 @@ const fs = require('fs');
 let WebSocket, { WebSocketServer } = require('ws');
 const http = require('http');
 
+const CBOR = require('cbor');
+const ASSERT = require('assert');
+const { Buffer } = require('buffer')
+
+
+
 
 
 const app = express();
@@ -19,61 +25,82 @@ let clientIdCounter = 100;
 
 
 
-const wss = new WebSocketServer({ server, path: '/websocket/', maxPayload: 100000000 })
+const wss = new WebSocketServer({ server, path: '/websocket/'})
 
 wss.on('connection', function (ws) {
     map.set(clientIdCounter, ws);
     ws.id = clientIdCounter;
-    ws.send(JSON.stringify({
+    let gid = CBOR.encode({
         id: ws.id,
         type: 'generateId'
-    }));
+    });
+    ws.send(gid);
 
     ws.on('message', (message) => {
-        let incommingSubmitedData = JSON.parse(message);
-        if (incommingSubmitedData.type === 'inputText') {
-            if (map.has(+incommingSubmitedData.data.id)) {
-                client = map.get(+(incommingSubmitedData.data.id));
-                let Data = JSON.stringify({
-                    data: {
-                        text: incommingSubmitedData.data.inputText,
-                        fromid: incommingSubmitedData.data.fromid,
-                        text_size:incommingSubmitedData.data.text_size
-                        
-                    },
-                    type: 'clientData'
-                })
-                client.send(Data)
+     
+
+        CBOR.decodeFirst(message, (err, obj) => {
+            if (err) {
+                console.log('error')
             }
 
-        } else if (incommingSubmitedData.type === 'inputFileData') {
-            if (map.has(+incommingSubmitedData.data.id)) {
-                console.log('file truu')
-                client = map.get(+(incommingSubmitedData.data.id));
-                let Data = JSON.stringify({
+            let incommingSubmitedData = obj;
+
+            if (incommingSubmitedData.type === 'inputText') {
+                if (map.has(+incommingSubmitedData.data.id)) {
+                    client = map.get(+(incommingSubmitedData.data.id));
+                    let Data = CBOR.encode({
+                        data: {
+                            text: incommingSubmitedData.data.inputText,
+                            fromid: incommingSubmitedData.data.fromid,
+                            text_size: incommingSubmitedData.data.text_size
+
+                        },
+                        type: 'clientData'
+                    })
+                    client.send(Data)
+                }
+
+            } else if (incommingSubmitedData.type === 'inputFileData') {
+                // console.log(incommingSubmitedData.file.byteLength);
+                if (map.has(+incommingSubmitedData.data.id)) {
+                   
+                    client = map.get(+(incommingSubmitedData.data.id));
+                    //for test
+                    let obj = {
+                        data: {
+                            name: "jhsbcgjasvgc",
+                            roll: 2255,
+                            fromid: incommingSubmitedData.data.fromid,
+                            file_name: incommingSubmitedData.data.file_name,
+                            file_size: incommingSubmitedData.data.file_size,
+                            file: new Uint8Array( incommingSubmitedData.data.file)
+                        },
+                        type:"inputFileData",
+
+
+                    }
+                    let encode = CBOR.encodeOne(obj, {highWaterMark: Math.max(5*1024*1024, +incommingSubmitedData.data.file_size +2*1024 )})
+                   
+                  
+                   
+                    client.send(encode);
+
+
+                }
+
+            } else if (incommingSubmitedData.type === 'isrecieved') {
+                client = map.get(+(incommingSubmitedData.data.toclientid));
+                client.send(CBOR.encode({
                     data: {
-                        fromid: incommingSubmitedData.data.fromid,
-                        file_name: incommingSubmitedData.data.file_name,
-                        file_size: incommingSubmitedData.data.file_size,
-                        file: incommingSubmitedData.data.file
+                        toclientid: incommingSubmitedData.data.fromid,
+                        status: true
                     },
-                    type: 'inputFileData'
-                })
-                client.send(Data)
+                    type: 'isrecieved',
+
+                }))
             }
-
-        } else if (incommingSubmitedData.type === 'isrecieved') {
-            // recieved status send to client
-            client = map.get(+(incommingSubmitedData.data.toclientid));
-            client.send(JSON.stringify({
-                data: {
-                    toclientid: incommingSubmitedData.data.fromid,
-                    status: true
-                },
-                type: 'isrecieved',
-
-            }))
-        }
+        })
 
         // if(incommingSubmitedData.type==='pingpong'){
 

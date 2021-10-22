@@ -26,5 +26,32 @@
     margin: 0;
     padding: 0;
     }
+.file_right_side{
+  display: grid;
+  align-items: center;
+  flex-direction: row-reverse;
+  font-size: 25px;
+  /* text-align: center; */
+  grid-template-columns: auto auto;
+}
+.file_right_side .size{
+   text-align: center;
+    margin: auto;
+    font-size: 18px;
+    font-weight: 400;
+    font-size: 18px;
+    font-weight: 400;
+    border-right: 2px solid dimgray;
+    padding-right: 18px;
+    height: 26px;
+    background: #eee;
+}
 
+.file_right_side .download{
+  font-size:25px;
+  color: #1890ff;  text-align: center;
+  margin-left: 12px;
+
+  
+}
   

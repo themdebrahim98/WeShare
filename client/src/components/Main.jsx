@@ -1,19 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, Children } from 'react'
 import './main.css'
-import axios from 'axios'
-import { FiFilePlus, FiDownload, FiCopy } from 'react-icons/fi';
-import { AiOutlineFileText } from 'react-icons/ai';
 import { VscInbox } from 'react-icons/vsc';
 
 import { Base64 } from 'js-base64';
 import { IncommingFiles } from './IncommingFiles';
 import { IncommingTexts } from './IncommingTexts';
-//  import WebSocket from 'ws';
+import { ImSpinner9 } from 'react-icons/im';
+import CBOR from 'cbor-js'
+
+
 
 
 
 export default function Main() {
 
+
+  let ishttps;
+  let hostname;
+  if (window.location.protocol === 'https:') {
+    ishttps = 'wss:'
+    hostname = window.location.hostname;
+  } else if (window.location.protocol === 'http:') {
+    ishttps = 'ws:';
+    hostname = window.location.host;
+  }
 
 
   const [fetchId, setFetchId] = useState({ id: '' });
@@ -33,22 +43,37 @@ export default function Main() {
   });
   let recievedDataRef = { ...recievedData }
   const inputref = useRef();
-  const [imgsrc, setimgsrc] = useState("");
   const downloadRef = useRef()
   const wsRef = useRef()
+  const [issend, setIssend] = useState(true)
 
-  const btnRef = useRef()
 
   const WebSocketConnection = () => {
-    const ws = new WebSocket('ws://localhost:5000/websocket/');
+    let url = `${ishttps}//${hostname}/websocket/`
+    let url2 = `ws://localhost:5000/websocket/`
+  
+
+    let ws = new WebSocket(url);
+    ws.binaryType = 'arraybuffer'
     wsRef.current = ws;
     ws.onopen = (e) => {
       console.log('websocket server connected..');
+      // setInterval(() => {
+      //   ws.send(JSON.stringify(
+      //     {
+
+      //       type: 'pingpong',
+      //       data: 'ping',
+      //     }
+      //   ))
+      // }, 5000);
 
     }
 
     ws.onmessage = (e) => {
-      let incommingData = JSON.parse(e.data);
+      
+      let incommingData = CBOR.decode(e.data);
+
 
       if (incommingData.type === 'generateId') {
         setFetchId(({ id: +(incommingData.id) }))
@@ -56,15 +81,45 @@ export default function Main() {
         console.log(incommingData.data, 'test');
         let newRecievedData = { ...recievedDataRef, text: [...recievedDataRef.text, incommingData.data] };
         setRecievedData(newRecievedData);
+        alert('Data Recieving...')
         recievedDataRef = newRecievedData;
+        // recieved status send to client
+        ws.send(CBOR.encode({
+          data: {
+            toclientid: incommingData.data.fromid,
+            status: true
+          },
+          type: 'isrecieved',
+
+
+        }))
         showfiledBox(2)
       } else if (incommingData.type === 'inputFileData') {
         let newRecievedData = { ...recievedDataRef, files: [...recievedDataRef.files, incommingData.data] };
+        alert('Data Recieving...')
+
         setRecievedData(newRecievedData);
         recievedDataRef = newRecievedData;
-        showfiledBox(2)
+        showfiledBox(2);
+        ws.send(CBOR.encode({
+          data: {
+            toclientid: incommingData.data.fromid,
+            status: true
+          },
+          type: 'isrecieved',
+
+
+        }))
+
+
+      } else if (incommingData.type === 'isrecieved') {
+        setIssend(incommingData.data.status);
+
 
       }
+
+
+
     }
     ws.onclose = (e) => {
       console.log('websocket server disconnected');
@@ -77,16 +132,11 @@ export default function Main() {
     }
 
 
-
-
-
   }
 
 
   useEffect(() => {
     WebSocketConnection();
-
-
   }, [])
 
 
@@ -94,39 +144,42 @@ export default function Main() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (store.inputText != '') {
+    let fileSizeinByte = filestore.file_size;
+    let fileSizeinKb = (fileSizeinByte / 1000);
 
-      let storeData = JSON.stringify({
-
+    if (store.inputText !== '' && store.id !== '') {
+      let blob = new Blob([store.inputText]);
+     
+      let storeData = CBOR.encode({
         data: {
           ...store,
-          fromid: fetchId.id
+          fromid: fetchId.id,
+          text_size: blob.size
 
         },
         type: 'inputText'
       })
-
       wsRef.current.send(storeData);
+      setIssend(false)
       setStore({ ...store, inputText: '' })
-    }
+    } else if (filestore !== '' && fileSizeinKb <= 30000 && store.id !== '') {
+   
 
-
-    let fileSizeinByte = filestore.file_size;
-    let fileSizeinKb = (fileSizeinByte / 1000);
-    console.log(fileSizeinKb, 'fileSizeinKb')
-
-    if (filestore !== '' && fileSizeinKb <= 30000 && store.id !== '') {
-      let inputFileData = JSON.stringify({
+      let inputFileData = CBOR.encode({
         data: filestore,
         type: 'inputFileData'
-      })
+      });
+
+
 
       wsRef.current.send(inputFileData)
       setFiletore('');
       inputref.current.value = ""
+      setIssend(false)
 
 
-    } else if (store.id === '') {
+
+    } else {
       e.preventDefault()
       alert('plase enter te recepant id')
     }
@@ -146,6 +199,7 @@ export default function Main() {
     }
     allLists[n].style.color = 'rgb(24, 144, 255)';
     allLists[n].style.borderBottom = '3px solid rgb(24, 144, 255)';
+    allLists[n].style.transition = 'color .2s ease-in'
     allFiled[n].style.display = 'block'
   }
 
@@ -182,7 +236,6 @@ export default function Main() {
   const arrayBufferToBase64 = async () => {
     let selected_file = inputref.current.files[0];
     const arraybuffertoInt8 = new Uint8Array(await selected_file.arrayBuffer())
-    const base64_sellected_file = Base64.fromUint8Array(arraybuffertoInt8);
     let id = Number(store.id);
     let fromid = Number(fetchId.id)
     setFiletore({
@@ -190,7 +243,7 @@ export default function Main() {
       fromid: fromid,
       file_name: selected_file.name,
       file_size: selected_file.size,
-      file: base64_sellected_file,
+      file: arraybuffertoInt8,
 
 
     })
@@ -199,12 +252,14 @@ export default function Main() {
 
 
   const bse64toFileUrl = (base64String) => {
-    let base64toUint8Array = Base64.toUint8Array(base64String);
-    let blob = new Blob([base64toUint8Array])
+    alert("download start..")
+    let blob = new Blob([base64String])
 
     downloadRef.current.href = URL.createObjectURL(blob)
-    console.log(URL.createObjectURL(blob, 'url'))
-    console.log(downloadRef.current)
+    downloadRef.current.onload = function () {
+      URL.revokeObjectURL(downloadRef.current.href);
+    }
+   
 
   }
 
@@ -212,9 +267,7 @@ export default function Main() {
 
   return (
     <>
-      {
-        console.log(recievedData.text, 'receved')
-      }
+     
 
       <div className="wrapper">
         <div className="container">
@@ -239,21 +292,22 @@ export default function Main() {
 
             <div className="sendText filed ">
               <form action="">
-                <textarea value={store.inputText} placeholder="paste or write your text to send" name="inputText" id="" style={{ width: "100%", height: "200px" }} onChange={(e) => handleChange(e, 'inputText')}  rows="200" >
+                <textarea value={store.inputText} placeholder="paste or write your text to send" name="inputText" id="" style={{ width: "100%", height: "240px" }} onChange={(e) => handleChange(e, 'inputText')} rows="240" >
                 </textarea>
               </form>
             </div>
 
             <div className="sendfile filed ">
               <div className="icon">
-                <div style={{ display: 'flex', flexDirection: 'column',justifyContent:'center',alignItems:'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                   <VscInbox onClick={fileChoose} className="fileIcon" />
-                  <p style={{fontSize:'25px'}}>Click this to send the file</p>
+                  <p style={{ fontSize: '25px' }}>Click this to send the file</p>
 
                 </div>
 
-
               </div>
+              <p style={{ fontSize: '18px' }}>{filestore.file_name}</p>
+
 
               <input type="file" multiple style={{ display: 'none' }} ref={inputref} onChange={arrayBufferToBase64} />
             </div>
@@ -280,7 +334,22 @@ export default function Main() {
           </div>
 
           <div className="send">
-            <button onClick={handleSubmit}>Send</button>
+            <button onClick={handleSubmit}>
+
+              {issend ?
+
+                "send"
+                :
+                <>
+
+                  <div class="spin"></div>
+                  <span className="sending ">sending..</span>
+
+                </>
+              }
+
+            </button>
+            {issend ? console.log('send') : console.log('sending')}
           </div>
 
 

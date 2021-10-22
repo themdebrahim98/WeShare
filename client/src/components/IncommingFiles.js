@@ -1,15 +1,14 @@
-import React, { useRef } from 'react'
-import { FiFilePlus, FiDownload, FiCopy } from 'react-icons/fi';
-import { AiOutlineFileText } from 'react-icons/ai';
-import { HiOutlineClipboardCopy } from 'react-icons/hi';
+import React from 'react'
 import { FileList } from './FileList'
 import './incommingFiles.css'
 
 
 
-
-
 export function IncommingFiles({ recievedData, bse64toFileUrl, downloadRef }) {
+
+
+	
+
 	return (
 		<div>
 
@@ -20,6 +19,7 @@ export function IncommingFiles({ recievedData, bse64toFileUrl, downloadRef }) {
 						<FileList
 						file={elm.file}
 						file_name={elm.file_name}
+						file_Size={elm.file_size}
 						fromid={elm.fromid}
 						recievedData={recievedData}
 						bse64toFileUrl={bse64toFileUrl}

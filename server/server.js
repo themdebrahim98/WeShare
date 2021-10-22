@@ -55,8 +55,8 @@ wss.on('connection', function (ws) {
             }
             if (incommingSubmitedData.type === 'inputText') {
                 if (map.has(+incommingSubmitedData.data.id)) {
-                    ws.send(CBOR.encode({type:'loading',isloading:true,toid:incommingSubmitedData.data.fromid}));
                     client = map.get(+(incommingSubmitedData.data.id));
+                    client.send(CBOR.encode({type:'loading',isloading:true,toid:incommingSubmitedData.data.fromid}));
                     let Data = CBOR.encode({
                         data: {
                             text: incommingSubmitedData.data.inputText,
@@ -82,9 +82,9 @@ wss.on('connection', function (ws) {
                 // console.log(incommingSubmitedData.file.byteLength);
                 if (map.has(+incommingSubmitedData.data.id)) {
 
-                    ws.send(CBOR.encode({type:'loading',isloading:true,toid:incommingSubmitedData.data.fromid}));
-
+                    
                     client = map.get(+(incommingSubmitedData.data.id));
+                    client.send(CBOR.encode({type:'loading',isloading:true,toid:incommingSubmitedData.data.fromid}));
                     //for test
                     let obj = {
                         data: {

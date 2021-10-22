@@ -87,6 +87,7 @@ export default function Main() {
 				setRecievedData(newRecievedData);
 				// alert('Data Recieving...')
 				recievedDataRef = newRecievedData;
+				setIsloading(false)
 				// recieved status send to client
 				ws.send(CBOR.encode({
 					data: {
@@ -105,6 +106,8 @@ export default function Main() {
 				setRecievedData(newRecievedData);
 				recievedDataRef = newRecievedData;
 				showfiledBox(2);
+				setIsloading(false)
+
 				ws.send(CBOR.encode({
 					data: {
 						toclientid: incommingData.data.fromid,
@@ -118,7 +121,7 @@ export default function Main() {
 
 			} else if (incommingData.type === 'isrecieved') {
 				setIssend(incommingData.data.status);
-				setIsloading(false)
+				// setIsloading(false)
 
 			} else if (incommingData.type === 'noclient') {
 				alert('this id not avalable');

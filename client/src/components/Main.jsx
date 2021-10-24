@@ -86,9 +86,8 @@ export default function Main() {
 				console.log(incommingData, 'test');
 				let newRecievedData = { ...recievedDataRef, text: [...recievedDataRef.text, incommingData.data] };
 				setRecievedData(newRecievedData);
-				// alert('Data Recieving...')
 				recievedDataRef = newRecievedData;
-				// setIsloading(false)
+				setIsloading(false)
 				// recieved status send to client
 				ws.send(CBOR.encode({
 					data: {
@@ -102,12 +101,11 @@ export default function Main() {
 				showfiledBox(2)
 			} else if (incommingData.type === 'inputFileData') {
 				let newRecievedData = { ...recievedDataRef, files: [...recievedDataRef.files, incommingData.data] };
-				// alert('Data Recieving...')
 
 				setRecievedData(newRecievedData);
 				recievedDataRef = newRecievedData;
 				showfiledBox(2);
-				// setIsloading(false)
+				setIsloading(false)
 
 				ws.send(CBOR.encode({
 					data: {
@@ -122,7 +120,7 @@ export default function Main() {
 
 			} else if (incommingData.type === 'isrecieved') {
 				setIssend(incommingData.data.status);
-				// setIsloading(false)
+				setIsloading(false)
 
 			} else if (incommingData.type === 'noclient') {
 				alert('this id not avalable');

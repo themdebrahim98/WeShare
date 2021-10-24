@@ -29,11 +29,10 @@
   position: absolute;
   background: #ddd;
   right: 25px;
-  width: 412px;
+  width: 332px;
   top: 11px;
   display: flex;
   flex-direction: column;
-  
   box-shadow: 4px 4px 8px grey;
 }
 .loader_wraper p{

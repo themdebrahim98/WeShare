@@ -1,11 +1,61 @@
 .loader{
-  position: absolute;
+  /* position: absolute;
   top: 10px;
   right: 19px;
   background: white;
-  padding: 2px 25px;
+  padding: 0px 31px;
   width: 220px;
   border-radius: 10px;
   height: 66px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  text-align: center; */
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  /* height: 28px; */
+  text-align: center;
+  /* font-size: 7px; */
+  /* background: red; */
+  width: 241px;
+  /* background: red; */
+  align-items: center;
 
+
+}
+.loader_wraper
+{
+  position: absolute;
+  background: #ddd;
+  right: 25px;
+  width: 412px;
+  top: 11px;
+  display: flex;
+  flex-direction: column;
+  
+  box-shadow: 4px 4px 8px grey;
+}
+.loader_wraper p{
+  color: gray;
+  padding-bottom: 15px;
+}
+
+.loading_spin::before {
+  animation: 1.5s linear infinite spinner;
+    /* animation-play-state: inherit; */
+    border: solid 5px transparent;
+    border-bottom-color: blue;
+    border-radius: 50%;
+    content: "";
+    height: 20px;
+    width: 20px;
+    position: absolute;
+    top: 32%;
+    font-size: 11px;
+    left: 5%;
+    transform: translate3d(-50%, -50%, 0);
+    will-change: transform;
+    text-align: center;
+    margin-left: 13px;
 }

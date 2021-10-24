@@ -46,7 +46,8 @@ export default function Main() {
 	const downloadRef = useRef()
 	const wsRef = useRef()
 	const [issend, setIssend] = useState(true);
-	const [isloading, setIsloading] = useState(false)
+	const [isloading, setIsloading] = useState(false);
+	const [fromid, setFromid] = useState(null)
 
 
 
@@ -87,7 +88,7 @@ export default function Main() {
 				setRecievedData(newRecievedData);
 				// alert('Data Recieving...')
 				recievedDataRef = newRecievedData;
-				setIsloading(false)
+				// setIsloading(false)
 				// recieved status send to client
 				ws.send(CBOR.encode({
 					data: {
@@ -106,7 +107,7 @@ export default function Main() {
 				setRecievedData(newRecievedData);
 				recievedDataRef = newRecievedData;
 				showfiledBox(2);
-				setIsloading(false)
+				// setIsloading(false)
 
 				ws.send(CBOR.encode({
 					data: {
@@ -128,7 +129,8 @@ export default function Main() {
 				setIssend(true)
 
 			}else if(incommingData.type==='loading'){
-				setIsloading(true)
+				setIsloading(true);
+				setFromid(incommingData.toid);
 			}
 
 
@@ -290,7 +292,7 @@ export default function Main() {
 			<div className="wrapper">
 				<div className="container">
 					{
-						isloading?<Loader />:null
+						isloading?<Loader fromid={fromid} />:null
 					}
 					
 

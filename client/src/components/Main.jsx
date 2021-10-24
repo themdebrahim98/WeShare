@@ -120,7 +120,7 @@ export default function Main() {
 
 			} else if (incommingData.type === 'isrecieved') {
 				setIssend(incommingData.data.status);
-				setIsloading(false)
+			
 
 			} else if (incommingData.type === 'noclient') {
 				alert('this id not avalable');

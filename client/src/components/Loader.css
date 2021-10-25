@@ -58,3 +58,22 @@
     text-align: center;
     margin-left: 13px;
 }
+
+
+
+@media screen and (max-width:500px) {
+
+  .loader_wraper {
+    position: initial;
+    background: #ddd;
+    /* right: 25px; */
+    width: 332px;
+    /* top: 8px; */
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 4px 8px grey;
+    text-align: center;
+    margin: 0 auto;
+}
+  
+}

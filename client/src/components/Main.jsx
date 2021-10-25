@@ -120,13 +120,13 @@ export default function Main() {
 
 			} else if (incommingData.type === 'isrecieved') {
 				setIssend(incommingData.data.status);
-			
+
 
 			} else if (incommingData.type === 'noclient') {
 				alert('this id not avalable');
 				setIssend(true)
 
-			}else if(incommingData.type==='loading'){
+			} else if (incommingData.type === 'loading') {
 				setIsloading(true);
 				setFromid(incommingData.toid);
 			}
@@ -160,7 +160,7 @@ export default function Main() {
 
 
 
-	const handleSubmit = (e) => {
+	const handleSubmit = async (e) => {
 		e.preventDefault()
 		let fileSizeinByte = filestore.file_size;
 		let fileSizeinKb = (fileSizeinByte / 1000);
@@ -168,6 +168,14 @@ export default function Main() {
 		if (store.inputText !== '' && store.id !== '') {
 			let blob = new Blob([store.inputText]);
 
+			let loadingStatusSend = CBOR.encode({
+
+				data: {
+					id: store.id,
+					fromid: fetchId.id,
+				},
+				type: 'loadingStatusSend'
+			});
 			let storeData = CBOR.encode({
 				data: {
 					...store,
@@ -176,12 +184,21 @@ export default function Main() {
 
 				},
 				type: 'inputText'
-			})
-			wsRef.current.send(storeData);
+			});
+			await wsRef.current.send(loadingStatusSend)
+			await wsRef.current.send(storeData);
 			setIssend(false)
 			setStore({ ...store, inputText: '' })
 		} else if (filestore !== '' && fileSizeinKb <= 30000 && store.id !== '') {
 
+			let loadingStatusSend = CBOR.encode({
+
+				data: {
+					id: filestore.id,
+					fromid: filestore.fromid,
+				},
+				type: 'loadingStatusSend'
+			});
 
 			let inputFileData = CBOR.encode({
 				data: filestore,
@@ -190,7 +207,8 @@ export default function Main() {
 
 
 
-			wsRef.current.send(inputFileData)
+			await wsRef.current.send(loadingStatusSend);
+			await wsRef.current.send(inputFileData)
 			setFiletore('');
 			inputref.current.value = ""
 			setIssend(false)
@@ -290,9 +308,9 @@ export default function Main() {
 			<div className="wrapper">
 				<div className="container">
 					{
-						isloading?<Loader fromid={fromid} />:null
+						isloading ? <Loader fromid={fromid} /> : null
 					}
-					
+
 
 					<p>MY ID <span>{fetchId.id}</span></p>
 

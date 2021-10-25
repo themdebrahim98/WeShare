@@ -56,7 +56,7 @@ wss.on('connection', function (ws) {
             if (incommingSubmitedData.type === 'inputText') {
                 if (map.has(+incommingSubmitedData.data.id)) {
                     client = map.get(+(incommingSubmitedData.data.id));
-                    client.send(CBOR.encode({type:'loading',isloading:true,toid:incommingSubmitedData.data.fromid}));
+                    // client.send(CBOR.encode({type:'loading',isloading:true,toid:incommingSubmitedData.data.fromid}));
                     let Data = CBOR.encode({
                         data: {
                             text: incommingSubmitedData.data.inputText,
@@ -67,28 +67,28 @@ wss.on('connection', function (ws) {
                         type: 'clientData'
                     })
                     client.send(Data)
-                }else{
+                } else {
                     let noClient = CBOR.encode({
-                        type:'noclient',
-                        message:'client no avalabale',
-                        toid:incommingSubmitedData.data.fromid,
+                        type: 'noclient',
+                        message: 'client no avalabale',
+                        toid: incommingSubmitedData.data.fromid,
                     });
 
                     ws.send(noClient);
-                    
+
                 }
 
             } else if (incommingSubmitedData.type === 'inputFileData') {
                 // console.log(incommingSubmitedData.file.byteLength);
                 if (map.has(+incommingSubmitedData.data.id)) {
 
-                    
+
                     client = map.get(+(incommingSubmitedData.data.id));
-                    client.send(CBOR.encode({type:'loading',isloading:true,toid:incommingSubmitedData.data.fromid}));
+                    // client.send(CBOR.encode({type:'loading',isloading:true,toid:incommingSubmitedData.data.fromid}));
                     //for test
                     let obj = {
                         data: {
-                          
+
                             fromid: incommingSubmitedData.data.fromid,
                             file_name: incommingSubmitedData.data.file_name,
                             file_size: incommingSubmitedData.data.file_size,
@@ -108,7 +108,7 @@ wss.on('connection', function (ws) {
                 }
 
             } else if (incommingSubmitedData.type === 'isrecieved') {
-                console.log('recieved',incommingSubmitedData)
+                console.log('recieved', incommingSubmitedData)
                 client = map.get(+(incommingSubmitedData.data.toclientid));
                 client.send(CBOR.encode({
                     data: {
@@ -118,6 +118,13 @@ wss.on('connection', function (ws) {
                     type: 'isrecieved',
 
                 }))
+            } else if (incommingSubmitedData.type === 'loadingStatusSend') {
+                if (map.has(+incommingSubmitedData.data.id)) {
+                    client = map.get(+(incommingSubmitedData.data.id));
+                    client.send(CBOR.encode({type:'loading',isloading:false,toid:incommingSubmitedData.data.fromid}));
+                }
+
+
             }
         })
 

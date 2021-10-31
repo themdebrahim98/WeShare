@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef, Children } from 'react'
 import './main.css'
 import { VscInbox } from 'react-icons/vsc';
 
-import { Base64 } from 'js-base64';
+// import { Base64 } from 'js-base64';
 import { IncommingFiles } from './IncommingFiles';
 import { IncommingTexts } from './IncommingTexts';
-import { ImSpinner9 } from 'react-icons/im';
+// import { ImSpinner9 } from 'react-icons/im';
 import CBOR from 'cbor-js'
 import Loader from './Loader';
 import Logo from './img/logo.png'
@@ -58,7 +58,7 @@ export default function Main() {
 		let url2 = `ws://localhost:5000/websocket/`
 
 
-		let ws = new WebSocket(url2);
+		let ws = new WebSocket(url1);
 		ws.binaryType = 'arraybuffer'
 		wsRef.current = ws;
 		ws.onopen = (e) => {
@@ -156,10 +156,9 @@ export default function Main() {
 
 	useEffect(() => {
 		WebSocketConnection();
-		const allLists = document.querySelectorAll('.list')[0].click();
+		const allLists = document.querySelectorAll('.list');
 		window.document.title = "Datash"
-
-
+		allLists[0].click();
 
 	}, [])
 
@@ -348,8 +347,6 @@ export default function Main() {
 					<a href="#">Home</a>
 					<a href="https://mdebraim98.netlify.app/">About</a>
 					<a href="">Feedback</a>
-					{/* <a href=""><img src="" alt="logo" /></a> */}
-
 				</div>
 			</div>
 

@@ -8,6 +8,7 @@ import { IncommingTexts } from './IncommingTexts';
 import { ImSpinner9 } from 'react-icons/im';
 import CBOR from 'cbor-js'
 import Loader from './Loader';
+import Logo from './img/logo.png'
 
 
 
@@ -47,7 +48,8 @@ export default function Main() {
 	const wsRef = useRef()
 	const [issend, setIssend] = useState(true);
 	const [isloading, setIsloading] = useState(false);
-	const [fromid, setFromid] = useState(null)
+	const [fromid, setFromid] = useState(null);
+	const [currentTab, setCurrentTab] = useState('')
 
 
 
@@ -77,7 +79,6 @@ export default function Main() {
 		ws.onmessage = (e) => {
 
 			let incommingData = CBOR.decode(e.data);
-			console.log(incommingData.message)
 
 
 			if (incommingData.type === 'generateId') {
@@ -155,6 +156,11 @@ export default function Main() {
 
 	useEffect(() => {
 		WebSocketConnection();
+		const allLists = document.querySelectorAll('.list')[0].click();
+		window.document.title = "Datash"
+
+
+
 	}, [])
 
 
@@ -164,65 +170,91 @@ export default function Main() {
 		e.preventDefault()
 		let fileSizeinByte = filestore.file_size;
 		let fileSizeinKb = (fileSizeinByte / 1000);
+		if (currentTab === 0) {
 
-		if (store.inputText !== '' && store.id !== '') {
-			let blob = new Blob([store.inputText]);
+			if (store.inputText !== '') {
 
-			let loadingStatusSend = CBOR.encode({
+				if (store.id !== '') {
 
-				data: {
-					id: store.id,
-					fromid: fetchId.id,
-				},
-				type: 'loadingStatusSend'
-			});
-			let storeData = CBOR.encode({
-				data: {
-					...store,
-					fromid: fetchId.id,
-					text_size: blob.size
+					let blob = new Blob([store.inputText]);
 
-				},
-				type: 'inputText'
-			});
-			await wsRef.current.send(loadingStatusSend)
-			await wsRef.current.send(storeData);
-			setIssend(false)
-			setStore({ ...store, inputText: '' })
-		} else if (filestore !== '' && fileSizeinKb <= 30000 && store.id !== '') {
+					let loadingStatusSend = CBOR.encode({
 
-			let loadingStatusSend = CBOR.encode({
+						data: {
+							id: store.id,
+							fromid: fetchId.id,
+						},
+						type: 'loadingStatusSend'
+					});
+					let storeData = CBOR.encode({
+						data: {
+							...store,
+							fromid: fetchId.id,
+							text_size: blob.size
 
-				data: {
-					id: filestore.id,
-					fromid: filestore.fromid,
-				},
-				type: 'loadingStatusSend'
-			});
+						},
+						type: 'inputText'
+					});
+					await wsRef.current.send(loadingStatusSend)
+					await wsRef.current.send(storeData);
+					setIssend(false)
+					setStore({ ...store, inputText: '' });
+				} else {
+					e.preventDefault()
+					alert('Please Enter Recipient ID!')
+				}
 
-			let inputFileData = CBOR.encode({
-				data: filestore,
-				type: 'inputFileData'
-			});
-
-
-
-			await wsRef.current.send(loadingStatusSend);
-			await wsRef.current.send(inputFileData)
-			setFiletore('');
-			inputref.current.value = ""
-			setIssend(false)
-
-
-
-		} else {
-			e.preventDefault()
-			alert('plase enter te recepant id')
+			} else if (store.inputText === '') {
+				alert('Please Enter Text!')
+			}
 		}
+
+
+		if (currentTab === 1) {
+
+			if (filestore !== '' && fileSizeinKb <= 30000) {
+				if (store.id !== '') {
+
+					let loadingStatusSend = CBOR.encode({
+
+						data: {
+							id: filestore.id,
+							fromid: filestore.fromid,
+						},
+						type: 'loadingStatusSend'
+					});
+
+					let inputFileData = CBOR.encode({
+						data: filestore,
+						type: 'inputFileData'
+					});
+
+
+
+					await wsRef.current.send(loadingStatusSend);
+					await wsRef.current.send(inputFileData)
+					setFiletore('');
+					inputref.current.value = ""
+					setIssend(false)
+
+
+
+				} else {
+					alert('Please Enter Recipient ID')
+				}
+			} else {
+				alert('Please Sellect File!')
+			}
+
+		}
+
+
 	}
 
 
 	const showfiledBox = (n) => {
+		setCurrentTab(n);
+		console.log(n, "number")
 		const allFiled = document.querySelectorAll('.dataContainer .filed');
 		const allLists = document.querySelectorAll('.list');
 		for (let i = 0; i < allFiled.length; i++) {
@@ -305,7 +337,24 @@ export default function Main() {
 		<>
 
 
+
+
+			<div className="navbar">
+				<div className="logo">
+					<img src={Logo} alt="logo" />
+					<p>Datash</p>
+				</div>
+				<div className="aboutInfo">
+					<a href="#">Home</a>
+					<a href="https://mdebraim98.netlify.app/">About</a>
+					<a href="">Feedback</a>
+					{/* <a href=""><img src="" alt="logo" /></a> */}
+
+				</div>
+			</div>
+
 			<div className="wrapper">
+
 				<div className="container">
 					{
 						isloading ? <Loader fromid={fromid} /> : null
@@ -353,12 +402,23 @@ export default function Main() {
 						</div>
 
 						<div className="recievedText filed ">
-							<IncommingTexts recievedData={recievedData} />
-							<IncommingFiles
-								downloadRef={downloadRef}
-								recievedData={recievedData}
-								bse64toFileUrl={bse64toFileUrl}
-							/>
+
+							{
+								recievedData.text.length <= 0 && recievedData.files.length <= 0
+									? <h1>No Receieved Data</h1>
+									:
+									<>
+										<IncommingTexts recievedData={recievedData} />
+										<IncommingFiles
+											downloadRef={downloadRef}
+											recievedData={recievedData}
+											bse64toFileUrl={bse64toFileUrl}
+										/>
+
+									</>
+							}
+
+
 
 
 						</div>

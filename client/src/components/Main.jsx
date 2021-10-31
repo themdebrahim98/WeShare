@@ -58,7 +58,7 @@ export default function Main() {
 		let url2 = `ws://localhost:5000/websocket/`
 
 
-		let ws = new WebSocket(url1);
+		let ws = new WebSocket(url);
 		ws.binaryType = 'arraybuffer'
 		wsRef.current = ws;
 		ws.onopen = (e) => {

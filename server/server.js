@@ -2,6 +2,7 @@ const express = require('express');
 var cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const config = require('dotenv')
 let WebSocket, { WebSocketServer } = require('ws');
 const http = require('http');
 
@@ -11,7 +12,7 @@ const { Buffer } = require('buffer')
 
 
 
-
+config.config()
 
 const app = express();
 const server = http.createServer(app);

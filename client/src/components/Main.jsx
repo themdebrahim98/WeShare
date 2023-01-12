@@ -26,6 +26,7 @@ export default function Main() {
 		hostname = window.location.host;
 	}
 
+	console.log(window.location,"location")
 
 	const [fetchId, setFetchId] = useState({ id: '' });
 	const [store, setStore] = useState({

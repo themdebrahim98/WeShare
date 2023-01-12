@@ -165,9 +165,12 @@ app.use(cors())
 
 app.use(express.json({ limit: '1gb', type: 'application/json' }));
 
-
+app.get('*',(req,res)=>{
+    res.sendFile(path.join(__dirname,"../client/build/index.html"));
+})
 server.listen(port, () => {
     console.log(`server runnig from ${port}`)
+    
 })
 
 

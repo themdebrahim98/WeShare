@@ -1,6 +1,6 @@
 <h3 align="center">
     <a href="#">
-        <img height="100" src="https://raw.githubusercontent.com/mdebrahim98/WeShare/master/logo.png" alt="logo" title="WeShare">
+        <img height="100" src="https://raw.githubusercontent.com/mdebrahim98/WeShare/master/logo (1).png" alt="logo" title="WeShare">
     </a>
 </h1>
 <h3 align="center">

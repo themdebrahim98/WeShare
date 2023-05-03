@@ -346,7 +346,7 @@ export default function Main() {
 				</div>
 				<div className="aboutInfo">
 					<a href="#">Home</a>
-					<a href="https://mdebraim98.netlify.app/">About</a>
+					<a href="https://github.com/mdebrahim98">About</a>
 					<a href="">Feedback</a>
 				</div>
 			</div>

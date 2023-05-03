@@ -20,7 +20,7 @@ WeShare helps you to send or receive text or file from one device to another one
 
 ## How to use?
 
-If you want to send something to someone, visit the [app](https://datash-clone2.herokuapp.com/) and also let recipient open the same link, select the files or enter text you want to send and enter the `Recipient ID` shown on the top of centered control panel of recipient device, then hit `Send` button to send to your recipient device.
+If you want to send something to someone, visit the [app](https://weshare-qc5z.onrender.com/) and also let recipient open the same link, select the files or enter text you want to send and enter the `Recipient ID` shown on the top of centered control panel of recipient device, then hit `Send` button to send to your recipient device.
 
 ## Feedback
 

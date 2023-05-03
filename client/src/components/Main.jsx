@@ -158,7 +158,7 @@ export default function Main() {
 	useEffect(() => {
 		WebSocketConnection();
 		const allLists = document.querySelectorAll('.list');
-		window.document.title = "Datash"
+		window.document.title = "WeShare"
 		allLists[0].click();
 
 	}, [])
@@ -342,7 +342,7 @@ export default function Main() {
 			<div className="navbar">
 				<div className="logo">
 					<img src={Logo} alt="logo" />
-					<p>Datash</p>
+					<p>WeShare</p>
 				</div>
 				<div className="aboutInfo">
 					<a href="#">Home</a>

@@ -15,7 +15,7 @@ function App() {
     setPageLoading(false);
 
 
-  }, 1000);
+  }, 100);
 
   return (
     <div className="App">

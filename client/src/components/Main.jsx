@@ -135,7 +135,7 @@ export default function Main() {
 		let url2 = `ws://localhost:5000/websocket/`
 
 
-		let ws = new WebSocket(url);
+		let ws = new WebSocket(url2);
 		ws.binaryType = 'arraybuffer'
 		wsRef.current = ws;
 		ws.onopen = (e) => {
@@ -178,13 +178,13 @@ export default function Main() {
 
 
 				}));
-				showfiledBox(2)
+				// showfiledBox(2)
 			} else if (incommingData.type === 'inputFileData') {
 				let newRecievedData = { ...recievedDataRef, files: [...recievedDataRef.files, incommingData.data] };
 
 				setRecievedData(newRecievedData);
 				recievedDataRef = newRecievedData;
-				showfiledBox(2);
+				// showfiledBox(2);
 				setIsloading(false)
 
 				ws.send(CBOR.encode({
@@ -226,12 +226,6 @@ export default function Main() {
 		}
 
 	}
-
-
-
-
-
-
 
 	useEffect(() => {
 		WebSocketConnection();
@@ -335,26 +329,6 @@ export default function Main() {
 	}
 
 
-	const showfiledBox = (n) => {
-		// setCurrentTab(n);
-		// console.log(n, "number")
-		// const allFiled = document.querySelectorAll('.dataContainer .filed');
-		// const allLists = document.querySelectorAll('.list');
-		// for (let i = 0; i < allFiled.length; i++) {
-		// 	allFiled[i].style.display = 'none'
-		// }
-		// for (let j = 0; j < allLists.length; j++) {
-		// 	allLists[j].style.color = 'black'
-		// 	allLists[j].style.borderBottom = '';
-
-		// }
-		// allLists[n].style.color = 'rgb(24, 144, 255)';
-		// allLists[n].style.borderBottom = '3px solid rgb(24, 144, 255)';
-		// allLists[n].style.transition = 'color .2s ease-in'
-		// allFiled[n].style.display = 'block'
-	}
-
-
 	const handleChange = (e, name) => {
 		let val = e.target.value;
 		setStore({
@@ -424,9 +398,9 @@ export default function Main() {
 				<Grid item xs={12} className='navbar' justifyContent='space-between' display='flex' mt={5} >
 					<Box className="logo" display='flex' justifyContent='space-between' alignItems='center' flexDirection='row' >
 						<Box sx={{ fontSize: '5px' }}>
-							<img src={Logo} alt="logo" width='20px' height='20px'  />
+							<img src={Logo} alt="logo" width='20px' height='20px' />
 						</Box>
-						<Typography style={{fontSize: isMobile ? '10px' :'40px'}} >WeShare</Typography>
+						<Typography style={{ fontSize: isMobile ? '10px' : '40px' }} >WeShare</Typography>
 					</Box>
 					<Box
 						className="aboutInfo"
@@ -447,7 +421,7 @@ export default function Main() {
 						<Grid item xs={12} className="container">
 
 							{
-								true ? <><label htmlFor="">Comming...</label><LinearProgress color="secondary" /> </> : null
+								isloading ? <><label htmlFor="">Comming...</label><LinearProgress color="secondary" /> </> : null
 
 
 							}
@@ -529,13 +503,13 @@ export default function Main() {
 									fullWidth
 								/>
 								<Box >
-									<Button size='large' variant='contained' onClick={handleSubmit}>
+									<Button size='large' sx={{ width: '6rem', height: '3rem' }} variant='contained' onClick={handleSubmit}>
 										{issend ?
 											"send"
 											:
 											<>
-												<Box class="spin"></Box>
-												<span className="sending ">sending..</span>
+												
+												<span>Sending..</span>
 
 											</>
 										}

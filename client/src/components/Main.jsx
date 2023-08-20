@@ -51,6 +51,7 @@ export default function Main() {
 	const [isloading, setIsloading] = useState(false);
 	const [fromid, setFromid] = useState(null);
 	const [currentTab, setCurrentTab] = useState('')
+	const [pingIntervalId, setPingIntervalId] = useState(null);
 
 
 
@@ -68,6 +69,7 @@ export default function Main() {
 				type: 'ping',
 				message: 'ping'
 			});
+	
 	
 
 			

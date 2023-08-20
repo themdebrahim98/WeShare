@@ -68,12 +68,13 @@ export default function Main() {
 				type: 'ping',
 				message: 'ping'
 			});
+	
 
-
-			setInterval(() => {
-
-				ws.send(pingmessage);
-			}, 5000);
+			
+			// setInterval(() => {
+			//  ws.send(pingmessage);
+			//  }, 5000);
+			 
 
 		}
 
@@ -160,6 +161,7 @@ export default function Main() {
 		const allLists = document.querySelectorAll('.list');
 		window.document.title = "WeShare"
 		allLists[0].click();
+	
 
 	}, [])
 

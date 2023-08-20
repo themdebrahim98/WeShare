@@ -19,19 +19,10 @@ function App() {
 
   return (
     <div className="App">
-      {
-        pageLoading
-          ?
-          <>
-            <div className="wrapper">
-              <div className="pageLoader">
-              </div>
+      
+          <Main />
 
-            </div>
-          </>
-          : <Main />
-
-      }
+      
 
     </div>
   );

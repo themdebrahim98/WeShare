@@ -51,6 +51,7 @@ export default function Main() {
 	const [isloading, setIsloading] = useState(false);
 	const [fromid, setFromid] = useState(null);
 	const [currentTab, setCurrentTab] = useState('')
+	const [pingIntervalId, setPingIntervalId] = useState(null);
 
 
 
@@ -68,12 +69,13 @@ export default function Main() {
 				type: 'ping',
 				message: 'ping'
 			});
+	
 
-
-			setInterval(() => {
-
-				ws.send(pingmessage);
-			}, 5000);
+			
+			 const intervalId = setInterval(() => {
+			 ws.send(pingmessage);
+			 }, 5000);
+			 setPingIntervalId(intervalId);
 
 		}
 
@@ -160,8 +162,13 @@ export default function Main() {
 		const allLists = document.querySelectorAll('.list');
 		window.document.title = "WeShare"
 		allLists[0].click();
+		return () => {
+		        if (pingIntervalId !== null) {
+				 clearInterval(pingIntervalId);
+	               }
+	    	 };
 
-	}, [])
+	}, [pingIntervalId])
 
 
 

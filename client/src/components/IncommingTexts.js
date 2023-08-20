@@ -5,7 +5,7 @@ import './incommingTexts.css'
 
 
 export function IncommingTexts({ recievedData }) {
-
+console.log(recievedData, "income")
     
 
 

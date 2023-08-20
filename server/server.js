@@ -46,6 +46,7 @@ wss.on('connection', function (ws) {
             }
 
             let incommingSubmitedData = obj;
+            console.log(incommingSubmitedData)
             if (incommingSubmitedData.type === 'ping') {
                 let pongmessage = CBOR.encodeOne({
                     type: 'pong',

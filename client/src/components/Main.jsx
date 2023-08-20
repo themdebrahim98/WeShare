@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef, Children } from 'react'
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import './main.css'
 import { VscInbox } from 'react-icons/vsc';
-
+import BackupIcon from '@mui/icons-material/Backup';
+import Link from '@mui/material/Link';
 // import { Base64 } from 'js-base64';
 import { IncommingFiles } from './IncommingFiles';
 import { IncommingTexts } from './IncommingTexts';
@@ -9,13 +12,85 @@ import { IncommingTexts } from './IncommingTexts';
 import CBOR from 'cbor-js'
 import Loader from './Loader';
 import Logo from './img/logo.png'
+import PropTypes from 'prop-types';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import { styled } from '@mui/material/styles';
+import FormControl from '@mui/material/FormControl';
+import { InputLabel, LinearProgress } from '@mui/material';
+import { Input } from '@mui/material';
+import Paper from '@mui/material/Paper';
+import { InputAdornment } from '@mui/material';
+import { Box, Button, Chip, Stack, TextField } from '@mui/material';
+const Item = styled(Paper)(({ theme }) => ({
+	backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
+	...theme.typography.body2,
+	padding: theme.spacing(1),
+	textAlign: 'center',
+	color: theme.palette.text.secondary,
+}));
+const StyledContainer = styled('div')({
+	display: 'flex',
+	flexDirection: 'row',
+	alignItems: 'center',
+	justifyContent: 'center',
+	gap: '16px',
+	padding: '16px',
+});
 
+function CustomTabPanel(props) {
+	const { children, value, index, ...other } = props;
 
+	return (
+		<div
+			role="tabpanel"
+			hidden={value !== index}
+			id={`simple-tabpanel-${index}`}
+			aria-labelledby={`simple-tab-${index}`}
+			{...other}
+			style={{
+				backgroundColor: '#eee',
+				// border:'1px solid #ddd'
+				overflowY: 'scroll',
+				maxHeight: '25rem'
+
+			}}
+		>
+			{value === index && (
+				<Box sx={{ p: 3 }}>
+					<Typography>{children}</Typography>
+				</Box>
+			)}
+		</div>
+	);
+}
+const StyledLink = styled(Link)({
+	textDecoration: 'none', // Remove underline
+	margin: '0 10px', // Add margin between the links
+});
+CustomTabPanel.propTypes = {
+	children: PropTypes.node,
+	index: PropTypes.number.isRequired,
+	value: PropTypes.number.isRequired,
+};
+
+function a11yProps(index) {
+	return {
+		id: `simple-tab-${index}`,
+		'aria-controls': `simple-tabpanel-${index}`,
+	};
+}
 
 
 export default function Main() {
-
-
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+	const [value, setValue] = React.useState(0);
+	const tabChange = (event, newValue) => {
+		setValue(newValue);
+	};
 	let ishttps;
 	let hostname;
 	if (window.location.protocol === 'https:') {
@@ -26,7 +101,7 @@ export default function Main() {
 		hostname = window.location.host;
 	}
 
-	console.log(window.location,"location")
+	// console.log(window.location, "location")
 
 	const [fetchId, setFetchId] = useState({ id: '' });
 	const [store, setStore] = useState({
@@ -60,7 +135,7 @@ export default function Main() {
 		let url2 = `ws://localhost:5000/websocket/`
 
 
-		let ws = new WebSocket(url);
+		let ws = new WebSocket(url2);
 		ws.binaryType = 'arraybuffer'
 		wsRef.current = ws;
 		ws.onopen = (e) => {
@@ -69,14 +144,14 @@ export default function Main() {
 				type: 'ping',
 				message: 'ping'
 			});
-	
-	
 
-			
+
+
+
 			// setInterval(() => {
 			//  ws.send(pingmessage);
 			//  }, 5000);
-			 
+
 
 		}
 
@@ -162,8 +237,8 @@ export default function Main() {
 		WebSocketConnection();
 		const allLists = document.querySelectorAll('.list');
 		window.document.title = "WeShare"
-		allLists[0].click();
-	
+		// allLists[0].click();
+
 
 	}, [])
 
@@ -171,13 +246,15 @@ export default function Main() {
 
 
 	const handleSubmit = async (e) => {
+
 		e.preventDefault()
 		let fileSizeinByte = filestore.file_size;
 		let fileSizeinKb = (fileSizeinByte / 1000);
-		if (currentTab === 0) {
+		if (value === 0) {
+			console.log(store)
 
 			if (store.inputText !== '') {
-
+				console.log('call')
 				if (store.id !== '') {
 
 					let blob = new Blob([store.inputText]);
@@ -201,6 +278,7 @@ export default function Main() {
 					});
 					await wsRef.current.send(loadingStatusSend)
 					await wsRef.current.send(storeData);
+
 					setIssend(false)
 					setStore({ ...store, inputText: '' });
 				} else {
@@ -209,12 +287,13 @@ export default function Main() {
 				}
 
 			} else if (store.inputText === '') {
+				console.log("not call")
 				alert('Please Enter Text!')
 			}
 		}
 
 
-		if (currentTab === 1) {
+		if (value === 1) {
 
 			if (filestore !== '' && fileSizeinKb <= 30000) {
 				if (store.id !== '') {
@@ -257,22 +336,22 @@ export default function Main() {
 
 
 	const showfiledBox = (n) => {
-		setCurrentTab(n);
-		console.log(n, "number")
-		const allFiled = document.querySelectorAll('.dataContainer .filed');
-		const allLists = document.querySelectorAll('.list');
-		for (let i = 0; i < allFiled.length; i++) {
-			allFiled[i].style.display = 'none'
-		}
-		for (let j = 0; j < allLists.length; j++) {
-			allLists[j].style.color = 'black'
-			allLists[j].style.borderBottom = '';
+		// setCurrentTab(n);
+		// console.log(n, "number")
+		// const allFiled = document.querySelectorAll('.dataContainer .filed');
+		// const allLists = document.querySelectorAll('.list');
+		// for (let i = 0; i < allFiled.length; i++) {
+		// 	allFiled[i].style.display = 'none'
+		// }
+		// for (let j = 0; j < allLists.length; j++) {
+		// 	allLists[j].style.color = 'black'
+		// 	allLists[j].style.borderBottom = '';
 
-		}
-		allLists[n].style.color = 'rgb(24, 144, 255)';
-		allLists[n].style.borderBottom = '3px solid rgb(24, 144, 255)';
-		allLists[n].style.transition = 'color .2s ease-in'
-		allFiled[n].style.display = 'block'
+		// }
+		// allLists[n].style.color = 'rgb(24, 144, 255)';
+		// allLists[n].style.borderBottom = '3px solid rgb(24, 144, 255)';
+		// allLists[n].style.transition = 'color .2s ease-in'
+		// allFiled[n].style.display = 'block'
 	}
 
 
@@ -338,138 +417,162 @@ export default function Main() {
 
 
 	return (
-		<>
+		<Box sx={{ justifyContent: 'center', display: 'flex', alignItems: 'center' }} >
+			{/* Navbar */}
+			<Grid container justifyContent='center' maxWidth={1000} spacing={5} display='flex'>
 
+				<Grid item xs={12} className='navbar' justifyContent='space-between' display='flex' mt={5} >
+					<Box className="logo" display='flex' justifyContent='space-between' alignItems='center' flexDirection='row' >
+						<Box sx={{ fontSize: '5px' }}>
+							<img src={Logo} alt="logo" width='20px' height='20px'  />
+						</Box>
+						<Typography style={{fontSize: isMobile ? '10px' :'40px'}} >WeShare</Typography>
+					</Box>
+					<Box
+						className="aboutInfo"
+						display="flex"
+						flexDirection="row"
+						justifyContent="center"
+						alignItems="center"
+						sx={{ '& > *': { mx: 2, textDecoration: 'none' } }} // Remove underline and add margin between the links
+					>
+						<StyledLink href="#">Home</StyledLink>
+						<StyledLink href="https://github.com/mdebrahim98">About</StyledLink>
+						<StyledLink href="">Feedback</StyledLink>
+					</Box>
 
-
-
-			<div className="navbar">
-				<div className="logo">
-					<img src={Logo} alt="logo" />
-					<p>WeShare</p>
-				</div>
-				<div className="aboutInfo">
-					<a href="#">Home</a>
-					<a href="https://github.com/mdebrahim98">About</a>
-					<a href="">Feedback</a>
-				</div>
-			</div>
-
-			<div className="wrapper">
-
-				<div className="container">
-					{
-						isloading ? <Loader fromid={fromid} /> : null
-					}
-
-
-					<p>MY ID <span>{fetchId.id}</span></p>
-
-
-					<div className="lists">
-						<div>
-							<p className="list" onClick={() => { showfiledBox(0) }}> send Text</p>
-						</div>
-						<div>
-							<p className="list" onClick={() => { showfiledBox(1) }}>send file</p>
-						</div>
-						<div>
-							<p className="list" onClick={() => { showfiledBox(2) }}>Recieved Text</p>
-						</div>
-
-
-					</div>
-					<div className="dataContainer">
-
-						<div className="sendText filed ">
-							<form action="">
-								<textarea value={store.inputText} placeholder="paste or write your text to send" name="inputText" id="" style={{ width: "100%", height: "240px" }} onChange={(e) => handleChange(e, 'inputText')} rows="240" >
-								</textarea>
-							</form>
-						</div>
-
-						<div className="sendfile filed ">
-							<div className="icon">
-								<div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-									<VscInbox onClick={fileChoose} className="fileIcon" />
-									<p style={{ fontSize: '25px' }}>Click this to send the file</p>
-
-								</div>
-
-							</div>
-							<p style={{ fontSize: '18px' }}>{filestore.file_name}</p>
-
-
-							<input type="file" multiple style={{ display: 'none' }} ref={inputref} onChange={arrayBufferToBase64} />
-						</div>
-
-						<div className="recievedText filed ">
+				</Grid>
+				<Grid item xs={12} className='wrapper'>
+					<Grid container>
+						<Grid item xs={12} className="container">
 
 							{
-								recievedData.text.length <= 0 && recievedData.files.length <= 0
-									? <h1>No Receieved Data</h1>
-									:
-									<>
-										<IncommingTexts recievedData={recievedData} />
-										<IncommingFiles
-											downloadRef={downloadRef}
-											recievedData={recievedData}
-											bse64toFileUrl={bse64toFileUrl}
-										/>
+								true ? <><label htmlFor="">Comming...</label><LinearProgress color="secondary" /> </> : null
 
-									</>
+
 							}
 
 
+							<Typography color='primary' fontSize={25}>MY ID <Box component='span' fontWeight={900} color='purple'>{fetchId.id}</Box></Typography>
 
 
-						</div>
+							<Box sx={{ width: '100%' }}>
+								<Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+									<Tabs value={value} onChange={tabChange} aria-label="basic tabs example" centered>
+										<Tab label="Send Text" {...a11yProps(0)} />
+										<Tab label="Send File" {...a11yProps(1)} />
+										<Tab label="Recieved Data" {...a11yProps(2)} />
+									</Tabs>
+								</Box>
+
+								<CustomTabPanel value={value} index={0}>
+									<Box className="sendText filed ">
+
+										<TextField sx={{ border: 'none' }} rows={10} multiline value={store.inputText} placeholder="paste or write your text to send" name="inputText" id="" style={{ width: "100%", height: "240px" }} onChange={(e) => handleChange(e, 'inputText')}>
+
+										</TextField>
+										{/* <form action="">
+											<textarea  >
+											</textarea>
+										</form> */}
+									</Box>
+								</CustomTabPanel>
+
+								<CustomTabPanel value={value} index={1}>
+									<Box >
+										<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+											<Box sx={{ display: 'flex', justifyContent: "center", alignItems: 'center', flexDirection: 'column' }} >
+												<Box sx={{ fontSize: '48px' }}>
+													<BackupIcon onClick={fileChoose} className="fileIcon" sx={{ cursor: 'pointer' }} />
+												</Box>
+												<Typography variant='text' >Click this to send the file</Typography>
+											</Box>
+										</Box>
+										<Typography style={{ fontSize: '18px', textAlign: 'center' }}>{filestore.file_name}</Typography>
+										<input type="file" multiple style={{ display: 'none' }} ref={inputref} onChange={arrayBufferToBase64} />
+									</Box>
+
+								</CustomTabPanel>
+
+								<CustomTabPanel value={value} index={2}>
+									<Box className=""  >
+
+										{
+											recievedData.text.length <= 0 && recievedData.files.length <= 0
+												? <Typography sx={{ textAlign: 'center', justifyContent: 'center', display: 'flex', minHeight: '200px' }}>No Receieved Data</Typography>
+												:
+												<>
+													<label>Text</label>
+													<IncommingTexts recievedData={recievedData} />
+													<hr />
+													<label>File</label>
+
+													<IncommingFiles
+														downloadRef={downloadRef}
+														recievedData={recievedData}
+														bse64toFileUrl={bse64toFileUrl}
+													/>
+
+												</>
+										}
+
+									</Box>
+								</CustomTabPanel>
+							</Box>
 
 
-					</div>
+							<StyledContainer>
+								<TextField
+									label=" Recipient ID"
+									variant="outlined"
+									value={store.id} placeholder=" Recipient Id" id="recipientid" className="recipientData" type="text" name="recipientData" onChange={(e) => handleChange(e, 'id')}
+									fullWidth
+								/>
+								<Box >
+									<Button size='large' variant='contained' onClick={handleSubmit}>
+										{issend ?
+											"send"
+											:
+											<>
+												<Box class="spin"></Box>
+												<span className="sending ">sending..</span>
 
-					<div className="recipientId">
-						<form action="">
-							<label htmlFor="recipientid"><button>Recipient Id</button> </label>
-							<input value={store.id} placeholder="Enter Recipient Id" id="recipientid" className="recipientData" type="text" name="recipientData" onChange={(e) => handleChange(e, 'id')} />
-						</form>
-					</div>
+											</>
+										}
 
-					<div className="send">
-						<button onClick={handleSubmit}>
+									</Button>
 
-							{issend ?
+								</Box>
 
-								"send"
-								:
-								<>
+								<div>{null}</div>
+							</StyledContainer>
+							<Box display='flex' justifyContent='space-between' alignItems='center' flexDirection='row' >
+								<Box component='form' action="">
+								</Box>
 
-									<div class="spin"></div>
-									<span className="sending ">sending..</span>
-
-								</>
-							}
-
-						</button>
-						{/* {issend ? console.log('send') : console.log('sending')} */}
-					</div>
-
-
-
-
-				</div>
-
-			</div>
-
-			<footer  >
-				<p>Md Ebrahim © 2021</p>
-			</footer>
+							</Box>
 
 
 
+						</Grid>
+						<Grid item xs={12}>
+							<footer>
+								<p>Md Ebrahim © 2021</p>
+							</footer>
+						</Grid>
+					</Grid>
+				</Grid>
 
 
-		</>
+
+			</Grid>
+
+
+
+
+
+
+		</Box>
 	)
 }
 

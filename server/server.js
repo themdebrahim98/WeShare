@@ -29,25 +29,32 @@ let clientIdCounter = 100;
 const wss = new WebSocketServer({ server, path: '/websocket/' })
 
 wss.on('connection', function (ws) {
-    map.set(clientIdCounter, ws);
-    ws.id = clientIdCounter;
-    let gid = CBOR.encode({
-        id: ws.id,
-        type: 'generateId'
-    });
-    ws.send(gid);
+    console.log(map)
+
+
+
 
     ws.on('message', (message) => {
-
-
         CBOR.decodeFirst(message, (err, obj) => {
             if (err) {
                 console.log('error')
             }
 
             let incommingSubmitedData = obj;
-            console.log(incommingSubmitedData)
-            if (incommingSubmitedData.type === 'ping') {
+            console.log(incommingSubmitedData, "DF")
+
+            if (incommingSubmitedData.type == 'generateId') {
+                map.set(clientIdCounter, ws);
+                ws.id = clientIdCounter;
+                let gid = CBOR.encode({
+                    id: ws.id,
+                    type: 'generateId'
+                });
+                ws.send(gid);
+                clientIdCounter++;
+            } else if (incommingSubmitedData.type == 'haveID') {
+                map.set(incommingSubmitedData.data.id, ws);
+            } else if (incommingSubmitedData.type === 'ping') {
                 let pongmessage = CBOR.encodeOne({
                     type: 'pong',
                     message: 'pong'
@@ -123,7 +130,7 @@ wss.on('connection', function (ws) {
             } else if (incommingSubmitedData.type === 'loadingStatusSend') {
                 if (map.has(+incommingSubmitedData.data.id)) {
                     client = map.get(+(incommingSubmitedData.data.id));
-                    client.send(CBOR.encode({type:'loading',isloading:false,toid:incommingSubmitedData.data.fromid}));
+                    client.send(CBOR.encode({ type: 'loading', isloading: false, toid: incommingSubmitedData.data.fromid }));
                 }
 
 
@@ -148,11 +155,11 @@ wss.on('connection', function (ws) {
     })
 
 
-    clientIdCounter++;
+
 
     ws.onclose = () => {
         console.log('clientdisconnected', ws.id)
-        map.delete(ws.id)
+        // map.delete(ws.id)
     }
 
 })
@@ -166,12 +173,12 @@ app.use(cors())
 
 app.use(express.json({ limit: '1gb', type: 'application/json' }));
 
-app.get('*',(req,res)=>{
-    res.sendFile(path.join(__dirname,"../client/build/index.html"));
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, "../client/build/index.html"));
 })
 server.listen(port, () => {
     console.log(`server runnig from ${port}`)
-    
+
 })
 
 

@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <style>
-        @keyframes spinner {
+      @keyframes spinner {
         0% {
           transform: translate3d(-50%, -50%, 0) rotate(0deg);
         }
@@ -31,25 +30,18 @@
         will-change: transform;
       }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <input id="foo" value="https://github.com/zenorocha/clipboard.js.git" />
 
-
-    <button class="btn" data-clipboard-target="#foo">
-        click
-    </button>
+    <button class="btn" data-clipboard-target="#foo">click</button>
     <div class="spin"></div>
 
     <script>
-        new ClipboardJS('.btn');
+      new ClipboardJS(".btn");
     </script>
 
     <script src="/clipboard/dist/clipboard.min.js"></script>
-
-</body>
-
-
-
+  </body>
 </html>

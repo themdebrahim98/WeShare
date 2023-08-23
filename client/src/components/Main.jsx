@@ -141,7 +141,7 @@ export default function Main() {
     let url = `${ishttps}//${hostname}/websocket/`;
     let url2 = `ws://localhost:5000/websocket/`;
 
-    let ws = new WebSocket(url);
+    let ws = new WebSocket(url2);
     ws.binaryType = "arraybuffer";
     wsRef.current = ws;
 
@@ -403,6 +403,7 @@ export default function Main() {
 
   const arrayBufferToBase64 = async () => {
     let selected_file = inputref.current.files[0];
+    console.log(await selected_file.arrayBuffer())
     const arraybuffertoInt8 = new Uint8Array(await selected_file.arrayBuffer());
     let id = Number(store.id);
     let fromid = Number(fetchId.id);

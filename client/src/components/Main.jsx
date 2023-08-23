@@ -5,6 +5,7 @@ import "./main.css";
 import { VscInbox } from "react-icons/vsc";
 import BackupIcon from "@mui/icons-material/Backup";
 import Link from "@mui/material/Link";
+import { Modal } from "@mui/material";
 // import { Base64 } from 'js-base64';
 import { IncommingFiles } from "./IncommingFiles";
 import { IncommingTexts } from "./IncommingTexts";
@@ -80,8 +81,20 @@ function a11yProps(index) {
     "aria-controls": `simple-tabpanel-${index}`,
   };
 }
-
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 400,
+  bgcolor: "background.paper",
+  border: "2px solid #000",
+  boxShadow: 24,
+  p: 4,
+};
 export default function Main() {
+  const [isConnectionLost, setisConnectionLost] = useState(false);
+  const [iserror, setiserror] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [value, setValue] = React.useState(0);
@@ -116,12 +129,14 @@ export default function Main() {
   const inputref = useRef();
   const downloadRef = useRef();
   const wsRef = useRef();
-  const [issend, setIssend] = useState(true);
-  const [isloading, setIsloading] = useState(false);
+  const [isloading, setisloading] = useState(false);
+  const [iscomming, setiscomming] = useState(false);
   const [fromid, setFromid] = useState(null);
   const [currentTab, setCurrentTab] = useState("");
   const [pingIntervalId, setPingIntervalId] = useState(null);
-
+  const [open, setOpen] = React.useState(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
   const WebSocketConnection = () => {
     let url = `${ishttps}//${hostname}/websocket/`;
     let url2 = `ws://localhost:5000/websocket/`;
@@ -161,11 +176,18 @@ export default function Main() {
 
     ws.onmessage = (e) => {
       let incommingData = CBOR.decode(e.data);
-
+      if (incommingData.type == "error") {
+        setiserror(true);
+        console.log(incommingData.message);
+      } else if (incommingData.type == "disconnected") {
+        alert(`Client  Disconnected`);
+        console.log("clientDisconnected");
+        setisloading(false);
+      }
       if (incommingData.type === "generateId") {
         setFetchId({ id: +incommingData.id });
         localStorage.setItem("myID", incommingData.id);
-      } else if (incommingData.type === "clientData") {
+      } else if (incommingData.type === "inputTextData") {
         console.log(incommingData, "test");
         let newRecievedData = {
           ...recievedDataRef,
@@ -173,7 +195,7 @@ export default function Main() {
         };
         setRecievedData(newRecievedData);
         recievedDataRef = newRecievedData;
-        setIsloading(false);
+        setiscomming(false);
         // recieved status send to client
         ws.send(
           CBOR.encode({
@@ -194,31 +216,61 @@ export default function Main() {
         setRecievedData(newRecievedData);
         recievedDataRef = newRecievedData;
         // showfiledBox(2);
-        setIsloading(false);
-
-        ws.send(
-          CBOR.encode({
-            data: {
-              toclientid: incommingData.data.fromid,
-              status: true,
-            },
-            type: "isrecieved",
-          })
-        );
+        setiscomming(false);
+        try {
+          ws.send(
+            CBOR.encode({
+              data: {
+                toclientid: incommingData.data.fromid,
+                status: true,
+              },
+              type: "isrecieved",
+              message: "Recieved succsessfully",
+            })
+          );
+        } catch (error) {
+          // ws.send(
+          //   CBOR.encode({
+          //     type: "error",
+          //     message:'Not recieved by other client'
+          //   })
+          // );
+        }
       } else if (incommingData.type === "isrecieved") {
-        setIssend(incommingData.data.status);
+        setisloading(false);
+        alert("Sent successfully");
+        console.log("Sent successfully");
       } else if (incommingData.type === "noclient") {
         alert("this id not avalable");
-        setIssend(true);
-      } else if (incommingData.type === "loading") {
-        setIsloading(true);
-        setFromid(incommingData.toid);
+        setisloading(false);
+      } else if (incommingData.type === "commingStatus") {
+        setiscomming(true);
+        setFromid(incommingData.fromid);
+        console.log(incommingData, "data");
+        // ws.send(
+        //   CBOR.encode({
+        //     type: "disconnected",
+        //     senderId: +fetchId.id,
+        //     recieverId: incommingData.fromid,
+        //   })
+        // );
+        window.addEventListener("beforeunload", () => {
+          ws.send(
+            CBOR.encode({
+              type: "disconnected",
+              senderId: +fetchId,
+              recieverId: incommingData.fromid,
+            })
+          );
+          ws.close(); // Close the socket after sending the disconnect message
+        });
       }
     };
 
     ws.onclose = (e) => {
       console.log("websocket server disconnected");
-      ws.send(`${ws.id}`);
+      setisConnectionLost(true);
+      setOpen(true);
     };
     ws.onerror = (e) => {
       console.log("websocket error", e);
@@ -233,15 +285,17 @@ export default function Main() {
   }, []);
 
   const handleSubmit = async (e) => {
+   
     e.preventDefault();
     let fileSizeinByte = filestore.file_size;
     let fileSizeinKb = fileSizeinByte / 1000;
     if (value === 0) {
       console.log(store);
 
-      if (store.inputText !== "") {
+      if (store.inputText !== "" && value == 0) {
         console.log("call");
         if (store.id !== "") {
+          setisloading(true);
           let blob = new Blob([store.inputText]);
 
           let loadingStatusSend = CBOR.encode({
@@ -249,7 +303,8 @@ export default function Main() {
               id: store.id,
               fromid: fetchId.id,
             },
-            type: "loadingStatusSend",
+            type: "commingStatus",
+            status: true,
           });
           let storeData = CBOR.encode({
             data: {
@@ -257,12 +312,22 @@ export default function Main() {
               fromid: fetchId.id,
               text_size: blob.size,
             },
-            type: "inputText",
+            type: "inputTextData",
           });
-          await wsRef.current.send(loadingStatusSend);
-          await wsRef.current.send(storeData);
-
-          setIssend(false);
+          try {
+            await wsRef.current.send(loadingStatusSend);
+            try {
+              await wsRef.current.send(storeData);
+            } catch (error) {
+              alert("while sending input text status(error)");
+              setisloading(false);
+              console.log("while sending input text status(error)");
+            }
+          } catch (error) {
+            alert("while sending loading status(error)");
+            setisloading(false);
+            console.log("while sending loading status(error)");
+          }
           setStore({ ...store, inputText: "" });
         } else {
           e.preventDefault();
@@ -275,14 +340,17 @@ export default function Main() {
     }
 
     if (value === 1) {
-      if (filestore !== "" && fileSizeinKb <= 30000) {
+      if (filestore !== "") {
+       
         if (store.id !== "") {
+          setisloading(true);
           let loadingStatusSend = CBOR.encode({
             data: {
               id: filestore.id,
               fromid: filestore.fromid,
             },
-            type: "loadingStatusSend",
+            type: "commingStatus",
+            status: true,
           });
 
           let inputFileData = CBOR.encode({
@@ -290,11 +358,22 @@ export default function Main() {
             type: "inputFileData",
           });
 
-          await wsRef.current.send(loadingStatusSend);
-          await wsRef.current.send(inputFileData);
+          try {
+            await wsRef.current.send(loadingStatusSend);
+            try {
+              await wsRef.current.send(inputFileData);
+            } catch (error) {
+              alert("while sending input file status(error)");
+              setisloading(false);
+              console.log("while sending input file status(error)");
+            }
+          } catch (error) {
+            alert("while sending loading status(error)");
+            setisloading(false);
+            console.log("while sending loading status(error)");
+          }
           setFiletore("");
           inputref.current.value = "";
-          setIssend(false);
         } else {
           alert("Please Enter Recipient ID");
         }
@@ -346,6 +425,11 @@ export default function Main() {
     };
   };
 
+  let reconnect = () => {
+    WebSocketConnection();
+    setOpen(false);
+    alert("Connection Restored");
+  };
   return (
     <Box
       sx={{
@@ -356,6 +440,23 @@ export default function Main() {
       }}
     >
       {/* Navbar */}
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+        sx={{ top: { xs: "-25%" }, maxWidth: "400px", m: "0 auto" }}
+      >
+        <Box sx={style} color="inherit">
+          <Typography mb={2} id="modal-modal-title" variant="h6" component="h2">
+            Connection Lost, Please Reconnect!
+          </Typography>
+
+          <Button variant="contained" onClick={reconnect}>
+            Reconnect
+          </Button>
+        </Box>
+      </Modal>
       <Grid
         container
         justifyContent="center"
@@ -431,7 +532,7 @@ export default function Main() {
                 },
               }}
             >
-              {isloading ? (
+              {iscomming ? (
                 <>
                   <label htmlFor="">Comming...</label>
                   <LinearProgress color="secondary" />{" "}
@@ -593,14 +694,9 @@ export default function Main() {
                     sx={{ width: "6rem", height: "3rem" }}
                     variant="contained"
                     onClick={handleSubmit}
+                    disabled={isloading}
                   >
-                    {issend ? (
-                      "send"
-                    ) : (
-                      <>
-                        <span>Sending..</span>
-                      </>
-                    )}
+                    {isloading && !iserror  ? "Sending..." : "Send"}
                   </Button>
                 </Box>
 

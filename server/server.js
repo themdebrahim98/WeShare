@@ -23,13 +23,15 @@ let clientIdCounter = 100;
 const wss = new WebSocketServer({ server, path: "/websocket/" });
 
 wss.on("connection", function (ws) {
+  console.log(map.keys)
   ws.on("message", (message) => {
     CBOR.decodeFirst(message, (err, obj) => {
       if (err) {
         console.log("error");
       }
-
+      
       let incommingSubmitedData = obj;
+      console.log(incommingSubmitedData)
   
 
       if (incommingSubmitedData.type == "generateId") {
@@ -43,6 +45,7 @@ wss.on("connection", function (ws) {
         clientIdCounter++;
       } else if (incommingSubmitedData.type == "haveID") {
         map.set(incommingSubmitedData.data.id, ws);
+        ws.id = incommingSubmitedData.data.id
       } else if (incommingSubmitedData.type === "ping") {
         let pongmessage = CBOR.encodeOne(
           {
@@ -189,8 +192,8 @@ wss.on("connection", function (ws) {
     //         type:'lostconnection'
     //     }
     // ))
-
-    // map.delete(ws.id)
+    console.log(map.keys)
+    map.delete(ws.id)
   };
 });
 

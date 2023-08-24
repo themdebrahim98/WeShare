@@ -23,16 +23,14 @@ let clientIdCounter = 100;
 const wss = new WebSocketServer({ server, path: "/websocket/" });
 
 wss.on("connection", function (ws) {
-  console.log(map.keys)
   ws.on("message", (message) => {
     CBOR.decodeFirst(message, (err, obj) => {
       if (err) {
         console.log("error");
       }
-      
+
       let incommingSubmitedData = obj;
-      console.log(incommingSubmitedData)
-  
+      // console.log(incommingSubmitedData,"incomming data")
 
       if (incommingSubmitedData.type == "generateId") {
         map.set(clientIdCounter, ws);
@@ -45,35 +43,32 @@ wss.on("connection", function (ws) {
         clientIdCounter++;
       } else if (incommingSubmitedData.type == "haveID") {
         map.set(incommingSubmitedData.data.id, ws);
-        ws.id = incommingSubmitedData.data.id
+        ws.id = incommingSubmitedData.data.id;
       } else if (incommingSubmitedData.type === "ping") {
         let pongmessage = CBOR.encodeOne(
           {
             type: "pong",
             message: "pong",
           },
-          { highWaterMark: 1024 * 1024 }
+          { highWaterMark: (1024 * 1024)  }
         );
         ws.send(pongmessage);
       }
       if (incommingSubmitedData.type === "inputTextData") {
         if (map.has(+incommingSubmitedData.data.id)) {
-            try {
-                client = map.get(+incommingSubmitedData.data.id);
-                // client.send(CBOR.encode({type:'loading',isloading:true,toid:incommingSubmitedData.data.fromid}));
-                let Data = CBOR.encode({
-                  data: {
-                    text: incommingSubmitedData.data.inputText,
-                    fromid: incommingSubmitedData.data.fromid,
-                    text_size: incommingSubmitedData.data.text_size,
-                  },
-                  type: "inputTextData",
-                });
-                client.send(Data);
-                
-            } catch (error) {
-                
-            }
+          try {
+            client = map.get(+incommingSubmitedData.data.id);
+            // client.send(CBOR.encode({type:'loading',isloading:true,toid:incommingSubmitedData.data.fromid}));
+            let Data = CBOR.encode({
+              data: {
+                text: incommingSubmitedData.data.inputText,
+                clientAid: incommingSubmitedData.data.clientAid,
+                text_size: incommingSubmitedData.data.text_size,
+              },
+              type: "inputTextData",
+            });
+            client.send(Data);
+          } catch (error) {}
         } else {
           let noClient = CBOR.encode({
             type: "noclient",
@@ -83,60 +78,78 @@ wss.on("connection", function (ws) {
 
           ws.send(noClient);
         }
-      } else if (incommingSubmitedData.type === "inputFileData") {
-        // console.log(incommingSubmitedData.file.byteLength);
-        if (map.has(+incommingSubmitedData.data.id)) {
+      } else if (incommingSubmitedData.type === "inputFileChunk") {
+        if (map.has(+incommingSubmitedData.clientBid)) {
           try {
-            client = map.get(+incommingSubmitedData.data.id);
+            client = map.get(+incommingSubmitedData.clientBid);
             // client.send(CBOR.encode({type:'loading',isloading:true,toid:incommingSubmitedData.data.fromid}));
             //for test
             let obj = {
               data: {
-                fromid: incommingSubmitedData.data.fromid,
-                file_name: incommingSubmitedData.data.file_name,
-                file_size: incommingSubmitedData.data.file_size,
-                file: new Uint8Array(incommingSubmitedData.data.file),
+                isLastChunk: incommingSubmitedData.isLastChunk,
+                clientAid: incommingSubmitedData.clientAid,
+                file_name: incommingSubmitedData.file_name,
+                file_size: incommingSubmitedData.file_size,
+                file: new Uint8Array(incommingSubmitedData.data),
               },
-              type: "inputFileData",
+              type: "inputFileChunk",
             };
             let encode = CBOR.encodeOne(obj, {
               highWaterMark: Math.max(
-                5 * 1024 * 1024,
-                +incommingSubmitedData.data.file_size + 2 * 1024
+                ((1024 * 1024 ) * 2 ),
+               0
               ),
             });
 
             client.send(encode);
           } catch (error) {
             console.log("Error while sending input file data");
+            console.log(error.message);
+
             let errorMessage = CBOR.encode({
               type: "error",
               message: "failed to send input file data  to other  client",
             });
             ws.send(errorMessage);
           }
-        }else{
-            let noClient = CBOR.encode({
-                type: "noclient",
-                message: "client no avalabale",
-                toid: incommingSubmitedData.data.fromid,
-              });
-    
-              ws.send(noClient);
+        } else {
+          let noClient = CBOR.encode({
+            type: "noclient",
+            message: "client no avalabale",
+            toid: incommingSubmitedData.data.fromid,
+          });
+
+          ws.send(noClient);
         }
       } else if (incommingSubmitedData.type === "isrecieved") {
         console.log("recieved", incommingSubmitedData);
-        client = map.get(+incommingSubmitedData.data.toclientid);
+       let client = map.get(+incommingSubmitedData.data.clientAid);
         client.send(
           CBOR.encode({
             data: {
-              toclientid: incommingSubmitedData.data.fromid,
+              clientAid: incommingSubmitedData.data.clientAid,
               status: true,
             },
             type: "isrecieved",
           })
         );
-      } else if (incommingSubmitedData.type === "commingStatus") {
+      }else if(incommingSubmitedData.type == "isrecievedText"){
+        let client = map.get(+incommingSubmitedData.data.clientAid);
+        if(client){
+          client.send(
+            CBOR.encode({
+              data: {
+                clientAid: incommingSubmitedData.data.clientAid,
+                status: true,
+              },
+              type: "isrecievedText",
+            })
+          );
+
+        }
+      }
+      
+      else if (incommingSubmitedData.type === "commingStatus") {
         if (map.has(+incommingSubmitedData.data.id)) {
           client = map.get(+incommingSubmitedData.data.id);
           try {
@@ -192,8 +205,8 @@ wss.on("connection", function (ws) {
     //         type:'lostconnection'
     //     }
     // ))
-    console.log(map.keys)
-    map.delete(ws.id)
+    console.log(map.keys);
+    map.delete(ws.id);
   };
 });
 

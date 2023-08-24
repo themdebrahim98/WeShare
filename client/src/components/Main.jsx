@@ -1,11 +1,18 @@
-import React, { useState, useEffect, useRef, Children } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  Children,
+  useMemo,
+  useCallback,
+} from "react";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import "./main.css";
 import { VscInbox } from "react-icons/vsc";
 import BackupIcon from "@mui/icons-material/Backup";
 import Link from "@mui/material/Link";
-import { Modal } from "@mui/material";
+import { Modal, checkboxClasses } from "@mui/material";
 // import { Base64 } from 'js-base64';
 import { IncommingFiles } from "./IncommingFiles";
 import { IncommingTexts } from "./IncommingTexts";
@@ -25,6 +32,24 @@ import { Input } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import { InputAdornment } from "@mui/material";
 import { Box, Button, Chip, Stack, TextField } from "@mui/material";
+
+
+function LinearProgressWithLabel(props) {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ width: '100%', mr: 1 }}>
+        <LinearProgress variant="determinate" {...props} />
+      </Box>
+      <Box sx={{ minWidth: 35 }}>
+        <Typography variant="body2" color="text.secondary">{`${Math.round(
+          props.value,
+        )}%`}</Typography>
+      </Box>
+    </Box>
+  );
+}
+
+
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === "dark" ? "#1A2027" : "#fff",
   ...theme.typography.body2,
@@ -51,7 +76,7 @@ function CustomTabPanel(props) {
       aria-labelledby={`simple-tab-${index}`}
       {...other}
       style={{
-        backgroundColor: "#b3e5fc",
+        backgroundColor: "#f6f6f6",
         overflowY: index != 0 ? "scroll" : "none",
         height: "15rem",
         alignItems: "center",
@@ -92,6 +117,7 @@ const style = {
   boxShadow: 24,
   p: 4,
 };
+
 export default function Main() {
   const [isConnectionLost, setisConnectionLost] = useState(false);
   const [iserror, setiserror] = useState(false);
@@ -135,13 +161,19 @@ export default function Main() {
   const [currentTab, setCurrentTab] = useState("");
   const [pingIntervalId, setPingIntervalId] = useState(null);
   const [open, setOpen] = React.useState(false);
+  const [fileChunks, setFileChunks] = React.useState([]);
+  const [recievedFileChunks, setRecievedFileChunks] = React.useState([]);
+  const [progress, setProgress] = useState(0);
+  const [isSellectFile, setisSellectFile] = useState(false);
+
+
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const WebSocketConnection = () => {
     let url = `${ishttps}//${hostname}/websocket/`;
     let url2 = `ws://localhost:5000/websocket/`;
 
-    let ws = new WebSocket(url2);
+    let ws = new WebSocket(url);
     ws.binaryType = "arraybuffer";
     wsRef.current = ws;
 
@@ -189,6 +221,7 @@ export default function Main() {
         localStorage.setItem("myID", incommingData.id);
       } else if (incommingData.type === "inputTextData") {
         console.log(incommingData, "test");
+        console.log(recievedDataRef, "ref");
         let newRecievedData = {
           ...recievedDataRef,
           text: [...recievedDataRef.text, incommingData.data],
@@ -196,50 +229,82 @@ export default function Main() {
         setRecievedData(newRecievedData);
         recievedDataRef = newRecievedData;
         setiscomming(false);
+        setValue(2);
         // recieved status send to client
         ws.send(
           CBOR.encode({
             data: {
-              toclientid: incommingData.data.fromid,
+              clientAid: incommingData.data.clientAid,
               status: true,
             },
-            type: "isrecieved",
+            type: "isrecievedText",
           })
         );
         // showfiledBox(2)
-      } else if (incommingData.type === "inputFileData") {
-        let newRecievedData = {
-          ...recievedDataRef,
-          files: [...recievedDataRef.files, incommingData.data],
-        };
+      } else if (incommingData.type === "inputFileChunk") {
+        console.log(incommingData, "each data");
+        setRecievedFileChunks((prev) => {
+          if (incommingData.data.isLastChunk == true) {
+            let totalLength = 0;
+            prev.push(incommingData.data.file);
+            prev.forEach((array) => (totalLength += array.length));
+            const combinedUint8Array = new Uint8Array(totalLength);
+            // Copy the contents of each Uint8Array into the combined array
+            let offset = 0;
+            prev.forEach((array) => {
+              combinedUint8Array.set(array, offset);
+              offset += array.length;
+            });
+            let { clientAid, file_name, file_size } = incommingData.data;
+            setRecievedData((prev) => ({
+              ...recievedDataRef,
+              files: [
+                ...prev.files,
+                { clientAid, file_name, file_size, file: combinedUint8Array },
+              ],
+            }));
+            recievedDataRef = {
+              ...recievedDataRef,
+              files: [
+                ...recievedDataRef.files,
+                { clientAid, file_name, file_size, file: combinedUint8Array },
+              ],
+            };
 
-        setRecievedData(newRecievedData);
-        recievedDataRef = newRecievedData;
-        // showfiledBox(2);
-        setiscomming(false);
-        try {
-          ws.send(
-            CBOR.encode({
-              data: {
-                toclientid: incommingData.data.fromid,
-                status: true,
-              },
-              type: "isrecieved",
-              message: "Recieved succsessfully",
-            })
-          );
-        } catch (error) {
-          // ws.send(
-          //   CBOR.encode({
-          //     type: "error",
-          //     message:'Not recieved by other client'
-          //   })
-          // );
-        }
+            try {
+              ws.send(
+                CBOR.encode({
+                  data: {
+                    clientAid: incommingData.data.clientAid,
+                    status: true,
+                  },
+                  type: "isrecieved",
+                  message: "Recieved succsessfully",
+                })
+              );
+              setiscomming((prev) => {
+                return false;
+              });
+              setValue(2);
+            } catch (error) {
+              ws.send(
+                CBOR.encode({
+                  type: "error",
+                  message: "Not recieved by other client",
+                })
+              );
+            }
+          }
+          return [...prev, incommingData.data.file];
+        });
       } else if (incommingData.type === "isrecieved") {
         setisloading(false);
         alert("Sent successfully");
         console.log("Sent successfully");
+      } else if (incommingData.type == "isrecievedText") {
+        setisloading(false)
+        setiscomming(false);
+        setisloading(false);
       } else if (incommingData.type === "noclient") {
         alert("this id not avalable");
         setisloading(false);
@@ -277,6 +342,10 @@ export default function Main() {
     };
   };
 
+  let test = () => {
+    console.log(recievedData, "test recieved data");
+  };
+  test();
   useEffect(() => {
     WebSocketConnection();
     const allLists = document.querySelectorAll(".list");
@@ -285,7 +354,6 @@ export default function Main() {
   }, []);
 
   const handleSubmit = async (e) => {
-   
     e.preventDefault();
     let fileSizeinByte = filestore.file_size;
     let fileSizeinKb = fileSizeinByte / 1000;
@@ -309,7 +377,7 @@ export default function Main() {
           let storeData = CBOR.encode({
             data: {
               ...store,
-              fromid: fetchId.id,
+              clientAid: fetchId.id,
               text_size: blob.size,
             },
             type: "inputTextData",
@@ -341,7 +409,6 @@ export default function Main() {
 
     if (value === 1) {
       if (filestore !== "") {
-       
         if (store.id !== "") {
           setisloading(true);
           let loadingStatusSend = CBOR.encode({
@@ -353,15 +420,31 @@ export default function Main() {
             status: true,
           });
 
-          let inputFileData = CBOR.encode({
-            data: filestore,
-            type: "inputFileData",
-          });
-
           try {
             await wsRef.current.send(loadingStatusSend);
             try {
-              await wsRef.current.send(inputFileData);
+              console.log(fileChunks, "check");
+              fileChunks.forEach(async(eachChunk, index) => {
+                let encObj;
+                let isLastChunk = false;
+                if (index == fileChunks.length - 1) {
+                  isLastChunk = true;
+                }
+                encObj = CBOR.encode({
+                  data: eachChunk,
+                  type: "inputFileChunk",
+                  clientAid: filestore.fromid,
+                  clientBid: filestore.id,
+                  file_name: filestore.file_name,
+                  file_size: filestore.file_size,
+                  isLastChunk: isLastChunk,
+                });
+
+                wsRef.current.send(encObj);
+                const chunkProgress = ((index + 1) / fileChunks.length) * 100;
+                setProgress((prevProgress) => (chunkProgress));
+               
+              });
             } catch (error) {
               alert("while sending input file status(error)");
               setisloading(false);
@@ -402,8 +485,37 @@ export default function Main() {
   }, [store.id]);
 
   const arrayBufferToBase64 = async () => {
+    setisSellectFile(true);
     let selected_file = inputref.current.files[0];
-    console.log(await selected_file.arrayBuffer())
+    const reader = new FileReader();
+    let offset = 0;
+    const chunkSize = 1024 * 1024;
+
+    reader.onload = (e) => {
+      const chunk = e.target.result;
+      console.log(chunk, "chunk");
+      if (chunk.byteLength === 0) {
+        console.log("File transmission complete");
+        alert("file read  completed. Now ,you can send file");
+        setisSellectFile(false);
+        return;
+      }
+      let chunkAsUint8 = new Uint8Array(chunk);
+      console.log(chunkAsUint8);
+      setFileChunks((prev) => [...prev, chunkAsUint8]);
+      offset += chunk.byteLength;
+      readNextChunk();
+    };
+
+    const readNextChunk = () => {
+      console.log("count");
+      const slice = selected_file.slice(offset, offset + chunkSize);
+
+      reader.readAsArrayBuffer(slice);
+    };
+
+    readNextChunk();
+    ///
     const arraybuffertoInt8 = new Uint8Array(await selected_file.arrayBuffer());
     let id = Number(store.id);
     let fromid = Number(fetchId.id);
@@ -412,7 +524,6 @@ export default function Main() {
       fromid: fromid,
       file_name: selected_file.name,
       file_size: selected_file.size,
-      file: arraybuffertoInt8,
     });
   };
 
@@ -533,6 +644,9 @@ export default function Main() {
                 },
               }}
             >
+              {
+                isloading && <LinearProgressWithLabel value={progress} />
+              }
               {iscomming ? (
                 <>
                   <label htmlFor="">Comming...</label>
@@ -695,9 +809,9 @@ export default function Main() {
                     sx={{ width: "6rem", height: "3rem" }}
                     variant="contained"
                     onClick={handleSubmit}
-                    disabled={isloading}
+                    disabled={isloading || iscomming || isSellectFile }
                   >
-                    {isloading && !iserror  ? "Sending..." : "Send"}
+                    {isloading && !iserror ? "Sending..." : "Send"}
                   </Button>
                 </Box>
 

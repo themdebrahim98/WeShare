@@ -91,6 +91,7 @@ const StyledLink = styled(Link)(({ theme }) => ({
   textDecoration: "none",
   margin: "0 10px",
   fontSize: { xs: "5px", sm: "5px" },
+  color: "white",
 }));
 CustomTabPanel.propTypes = {
   children: PropTypes.node,
@@ -135,7 +136,6 @@ export default function Main() {
     hostname = window.location.host;
   }
 
-
   const [fetchId, setFetchId] = useState({ id: "" });
   const [store, setStore] = useState({
     id: "",
@@ -169,7 +169,7 @@ export default function Main() {
   const handleClose = () => setOpen(false);
 
   const WebSocketConnection = () => {
-    let ws = new WebSocket(url2);
+    let ws = new WebSocket(url);
     ws.binaryType = "arraybuffer";
     wsRef.current = ws;
 
@@ -292,6 +292,7 @@ export default function Main() {
         }
       } else if (incommingData.type === "isrecieved") {
         setisloading(false);
+        setProgress(0);
         // alert("Sent successfully");
       } else if (incommingData.type == "isrecievedText") {
         setisloading(false);
@@ -345,7 +346,6 @@ export default function Main() {
     let fileSizeinByte = filestore.file_size;
     let fileSizeinKb = fileSizeinByte / 1000;
     if (value === 0) {
-
       if (store.inputText !== "" && value == 0) {
         if (store.id !== "") {
           setisloading(true);
@@ -405,7 +405,9 @@ export default function Main() {
           try {
             await wsRef.current.send(loadingStatusSend);
             try {
-              fileChunks.forEach(async (eachChunk, index) => {
+              for (let i = 0; i < fileChunks.length; i++) {
+                let eachChunk = fileChunks[i];
+                let index = i;
                 let encObj;
                 let isLastChunk = false;
                 if (index == fileChunks.length - 1) {
@@ -422,8 +424,9 @@ export default function Main() {
                 });
                 wsRef.current.send(encObj);
                 const chunkProgress = ((index + 1) / fileChunks.length) * 100;
-                setProgress((prevProgress) => chunkProgress);
-              });
+                setProgress(chunkProgress);
+              }
+
               setFileChunks([]);
             } catch (error) {
               alert("while sending input file status(error)");
@@ -468,7 +471,7 @@ export default function Main() {
     let selected_file = inputref.current.files[0];
     const reader = new FileReader();
     let offset = 0;
-    const chunkSize = 1024 * 1024;
+    const chunkSize = 4194304; // 4mb
 
     reader.onload = (e) => {
       const chunk = e.target.result;
@@ -502,16 +505,6 @@ export default function Main() {
       file_size: selected_file.size,
     });
   };
-
-  // const bse64toFileUrl = (base64String) => {
-  //   alert("download start..");
-  //   let blob = new Blob([base64String]);
-
-  //   downloadRef.current.href = URL.createObjectURL(blob);
-  //   downloadRef.current.onload = function () {
-  //     URL.revokeObjectURL(downloadRef.current.href);
-  //   };
-  // };
 
   let reconnect = () => {
     WebSocketConnection();
@@ -551,7 +544,6 @@ export default function Main() {
         maxWidth={800}
         spacing={5}
         display="flex"
-
       >
         <Grid
           item
@@ -575,6 +567,7 @@ export default function Main() {
                 fontSize: { xs: "12px", sm: "16px" },
                 ml: 1,
                 fontWeight: "800",
+                cursor: "pointer",
               }}
             >
               WeShare
@@ -623,10 +616,10 @@ export default function Main() {
             >
               {isloading && <LinearProgressWithLabel value={progress} />}
               {iscomming ? (
-                <>
+                <Box position="absolute">
                   <label htmlFor="">Comming...</label>
                   <LinearProgress color="secondary" />{" "}
-                </>
+                </Box>
               ) : null}
 
               <Typography
@@ -749,10 +742,14 @@ export default function Main() {
                       </Box>
                     ) : (
                       <>
-                        <Typography variant="h5" fontWeight={700}>Texts</Typography>
+                        <Typography variant="h5" fontWeight={700}>
+                          Texts
+                        </Typography>
                         <IncommingTexts recievedData={recievedData} />
-                        <Divider sx={{marginTop:'4px'}}/>
-                        <Typography variant="h5"fontWeight={700}>Files</Typography>
+                        <Divider sx={{ marginTop: "4px" }} />
+                        <Typography variant="h5" fontWeight={700}>
+                          Files
+                        </Typography>
                         <IncommingFiles
                           // downloadRef={downloadRef}
                           recievedData={recievedData}

@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "cd server && npm run start ",
     "preinstall": "cd client &&  npm install && cd ../server && npm install && cd ../",
-    "build": "npm i && cd client && npm run build && cd ../ "
+    "build": "cd client && npm run build && cd ../ "
   },
   "keywords": [],
   "author": "",

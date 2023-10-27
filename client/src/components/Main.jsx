@@ -12,7 +12,7 @@ import "./main.css";
 import { VscInbox } from "react-icons/vsc";
 import BackupIcon from "@mui/icons-material/Backup";
 import Link from "@mui/material/Link";
-import { Modal, checkboxClasses } from "@mui/material";
+import { Divider, Modal, checkboxClasses } from "@mui/material";
 // import { Base64 } from 'js-base64';
 import { IncommingFiles } from "./IncommingFiles";
 import { IncommingTexts } from "./IncommingTexts";
@@ -33,22 +33,20 @@ import Paper from "@mui/material/Paper";
 import { InputAdornment } from "@mui/material";
 import { Box, Button, Chip, Stack, TextField } from "@mui/material";
 
-
 function LinearProgressWithLabel(props) {
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-      <Box sx={{ width: '100%', mr: 1 }}>
+    <Box sx={{ display: "flex", alignItems: "center" }}>
+      <Box sx={{ width: "100%", mr: 1 }}>
         <LinearProgress variant="determinate" {...props} />
       </Box>
       <Box sx={{ minWidth: 35 }}>
         <Typography variant="body2" color="text.secondary">{`${Math.round(
-          props.value,
+          props.value
         )}%`}</Typography>
       </Box>
     </Box>
   );
 }
-
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === "dark" ? "#1A2027" : "#fff",
@@ -78,7 +76,7 @@ function CustomTabPanel(props) {
       style={{
         backgroundColor: "#f6f6f6",
         overflowY: index != 0 ? "scroll" : "none",
-        height: "15rem",
+        height: "20rem",
         alignItems: "center",
         position: "relative",
         border: "1px solid #4fc3f7",
@@ -137,7 +135,6 @@ export default function Main() {
     hostname = window.location.host;
   }
 
-  // console.log(window.location, "location")
 
   const [fetchId, setFetchId] = useState({ id: "" });
   const [store, setStore] = useState({
@@ -153,7 +150,7 @@ export default function Main() {
   });
   let recievedDataRef = { ...recievedData };
   const inputref = useRef();
-  const downloadRef = useRef();
+  // const downloadRef = useRef();
   const wsRef = useRef();
   const [isloading, setisloading] = useState(false);
   const [iscomming, setiscomming] = useState(false);
@@ -162,23 +159,21 @@ export default function Main() {
   const [pingIntervalId, setPingIntervalId] = useState(null);
   const [open, setOpen] = React.useState(false);
   const [fileChunks, setFileChunks] = React.useState([]);
-  const [recievedFileChunks, setRecievedFileChunks] = React.useState([]);
+  let recievedFileChunks = [];
   const [progress, setProgress] = useState(0);
   const [isSellectFile, setisSellectFile] = useState(false);
-
+  let url = `${ishttps}//${hostname}/websocket/`;
+  let url2 = `ws://localhost:5000/websocket/`;
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-  const WebSocketConnection = () => {
-    let url = `${ishttps}//${hostname}/websocket/`;
-    let url2 = `ws://localhost:5000/websocket/`;
 
-    let ws = new WebSocket(url);
+  const WebSocketConnection = () => {
+    let ws = new WebSocket(url2);
     ws.binaryType = "arraybuffer";
     wsRef.current = ws;
 
     ws.onopen = (e) => {
-      console.log("websocket server connected..");
       let pingmessage = CBOR.encode({
         type: "ping",
         message: "ping",
@@ -210,24 +205,24 @@ export default function Main() {
       let incommingData = CBOR.decode(e.data);
       if (incommingData.type == "error") {
         setiserror(true);
-        console.log(incommingData.message);
       } else if (incommingData.type == "disconnected") {
         alert(`Client  Disconnected`);
-        console.log("clientDisconnected");
         setisloading(false);
       }
       if (incommingData.type === "generateId") {
         setFetchId({ id: +incommingData.id });
         localStorage.setItem("myID", incommingData.id);
       } else if (incommingData.type === "inputTextData") {
-        console.log(incommingData, "test");
-        console.log(recievedDataRef, "ref");
-        let newRecievedData = {
-          ...recievedDataRef,
-          text: [...recievedDataRef.text, incommingData.data],
-        };
-        setRecievedData(newRecievedData);
-        recievedDataRef = newRecievedData;
+        // let newRecievedData = {
+        //   ...recievedData,
+        //   text: [...recievedDataRef.text, incommingData.data],
+
+        // };
+        setRecievedData((prev) => ({
+          ...prev,
+          text: [...prev.text, incommingData.data],
+        }));
+        // recievedDataRef = newRecievedData;
         setiscomming(false);
         setValue(2);
         // recieved status send to client
@@ -242,67 +237,64 @@ export default function Main() {
         );
         // showfiledBox(2)
       } else if (incommingData.type === "inputFileChunk") {
-        console.log(incommingData, "each data");
-        setRecievedFileChunks((prev) => {
-          if (incommingData.data.isLastChunk == true) {
-            let totalLength = 0;
-            prev.push(incommingData.data.file);
-            prev.forEach((array) => (totalLength += array.length));
-            const combinedUint8Array = new Uint8Array(totalLength);
-            // Copy the contents of each Uint8Array into the combined array
-            let offset = 0;
-            prev.forEach((array) => {
-              combinedUint8Array.set(array, offset);
-              offset += array.length;
-            });
-            let { clientAid, file_name, file_size } = incommingData.data;
-            setRecievedData((prev) => ({
-              ...recievedDataRef,
-              files: [
-                ...prev.files,
-                { clientAid, file_name, file_size, file: combinedUint8Array },
-              ],
-            }));
-            recievedDataRef = {
-              ...recievedDataRef,
-              files: [
-                ...recievedDataRef.files,
-                { clientAid, file_name, file_size, file: combinedUint8Array },
-              ],
-            };
+        recievedFileChunks.push(incommingData.data.file);
+        if (incommingData.data.isLastChunk == true) {
+          let totalLength = 0;
+          recievedFileChunks.forEach((array) => (totalLength += array.length));
+          const combinedUint8Array = new Uint8Array(totalLength);
+          // Copy the contents of each Uint8Array into the combined array
+          let offset = 0;
+          recievedFileChunks.forEach((array) => {
+            combinedUint8Array.set(array, offset);
+            offset += array.length;
+          });
+          let { clientAid, file_name, file_size } = incommingData.data;
+          setRecievedData((prevVal) => ({
+            ...prevVal,
+            files: [
+              ...prevVal.files,
+              { clientAid, file_name, file_size, file: combinedUint8Array },
+            ],
+          }));
+          recievedFileChunks = [];
+          // recievedDataRef = {
+          //   ...recievedDataRef,
+          //   files: [
+          //     ...recievedDataRef.files,
+          //     { clientAid, file_name, file_size, file: combinedUint8Array },
+          //   ],
+          // };
 
-            try {
-              ws.send(
-                CBOR.encode({
-                  data: {
-                    clientAid: incommingData.data.clientAid,
-                    status: true,
-                  },
-                  type: "isrecieved",
-                  message: "Recieved succsessfully",
-                })
-              );
-              setiscomming((prev) => {
-                return false;
-              });
-              setValue(2);
-            } catch (error) {
-              ws.send(
-                CBOR.encode({
-                  type: "error",
-                  message: "Not recieved by other client",
-                })
-              );
-            }
+          try {
+            ws.send(
+              CBOR.encode({
+                data: {
+                  clientAid: incommingData.data.clientAid,
+                  status: true,
+                },
+                type: "isrecieved",
+                message: "Recieved succsessfully",
+                test: "test",
+              })
+            );
+            setiscomming((prev) => {
+              return false;
+            });
+            setValue(2);
+          } catch (error) {
+            ws.send(
+              CBOR.encode({
+                type: "error",
+                message: "Not recieved by other client",
+              })
+            );
           }
-          return [...prev, incommingData.data.file];
-        });
+        }
       } else if (incommingData.type === "isrecieved") {
         setisloading(false);
-        alert("Sent successfully");
-        console.log("Sent successfully");
+        // alert("Sent successfully");
       } else if (incommingData.type == "isrecievedText") {
-        setisloading(false)
+        setisloading(false);
         setiscomming(false);
         setisloading(false);
       } else if (incommingData.type === "noclient") {
@@ -311,7 +303,6 @@ export default function Main() {
       } else if (incommingData.type === "commingStatus") {
         setiscomming(true);
         setFromid(incommingData.fromid);
-        console.log(incommingData, "data");
         // ws.send(
         //   CBOR.encode({
         //     type: "disconnected",
@@ -342,10 +333,6 @@ export default function Main() {
     };
   };
 
-  let test = () => {
-    console.log(recievedData, "test recieved data");
-  };
-  test();
   useEffect(() => {
     WebSocketConnection();
     const allLists = document.querySelectorAll(".list");
@@ -358,10 +345,8 @@ export default function Main() {
     let fileSizeinByte = filestore.file_size;
     let fileSizeinKb = fileSizeinByte / 1000;
     if (value === 0) {
-      console.log(store);
 
       if (store.inputText !== "" && value == 0) {
-        console.log("call");
         if (store.id !== "") {
           setisloading(true);
           let blob = new Blob([store.inputText]);
@@ -389,12 +374,10 @@ export default function Main() {
             } catch (error) {
               alert("while sending input text status(error)");
               setisloading(false);
-              console.log("while sending input text status(error)");
             }
           } catch (error) {
             alert("while sending loading status(error)");
             setisloading(false);
-            console.log("while sending loading status(error)");
           }
           setStore({ ...store, inputText: "" });
         } else {
@@ -402,7 +385,6 @@ export default function Main() {
           alert("Please Enter Recipient ID!");
         }
       } else if (store.inputText === "") {
-        console.log("not call");
         alert("Please Enter Text!");
       }
     }
@@ -423,8 +405,7 @@ export default function Main() {
           try {
             await wsRef.current.send(loadingStatusSend);
             try {
-              console.log(fileChunks, "check");
-              fileChunks.forEach(async(eachChunk, index) => {
+              fileChunks.forEach(async (eachChunk, index) => {
                 let encObj;
                 let isLastChunk = false;
                 if (index == fileChunks.length - 1) {
@@ -439,21 +420,18 @@ export default function Main() {
                   file_size: filestore.file_size,
                   isLastChunk: isLastChunk,
                 });
-
                 wsRef.current.send(encObj);
                 const chunkProgress = ((index + 1) / fileChunks.length) * 100;
-                setProgress((prevProgress) => (chunkProgress));
-               
+                setProgress((prevProgress) => chunkProgress);
               });
+              setFileChunks([]);
             } catch (error) {
               alert("while sending input file status(error)");
               setisloading(false);
-              console.log("while sending input file status(error)");
             }
           } catch (error) {
             alert("while sending loading status(error)");
             setisloading(false);
-            console.log("while sending loading status(error)");
           }
           setFiletore("");
           inputref.current.value = "";
@@ -485,6 +463,7 @@ export default function Main() {
   }, [store.id]);
 
   const arrayBufferToBase64 = async () => {
+    setFileChunks([]);
     setisSellectFile(true);
     let selected_file = inputref.current.files[0];
     const reader = new FileReader();
@@ -493,24 +472,21 @@ export default function Main() {
 
     reader.onload = (e) => {
       const chunk = e.target.result;
-      console.log(chunk, "chunk");
       if (chunk.byteLength === 0) {
-        console.log("File transmission complete");
-        alert("file read  completed. Now ,you can send file");
+        // alert("file read  completed. Now ,you can send file");
         setisSellectFile(false);
         return;
       }
       let chunkAsUint8 = new Uint8Array(chunk);
-      console.log(chunkAsUint8);
-      setFileChunks((prev) => [...prev, chunkAsUint8]);
+      setFileChunks((prev) => {
+        return [...prev, chunkAsUint8];
+      });
       offset += chunk.byteLength;
       readNextChunk();
     };
 
     const readNextChunk = () => {
-      console.log("count");
       const slice = selected_file.slice(offset, offset + chunkSize);
-
       reader.readAsArrayBuffer(slice);
     };
 
@@ -527,15 +503,15 @@ export default function Main() {
     });
   };
 
-  const bse64toFileUrl = (base64String) => {
-    alert("download start..");
-    let blob = new Blob([base64String]);
+  // const bse64toFileUrl = (base64String) => {
+  //   alert("download start..");
+  //   let blob = new Blob([base64String]);
 
-    downloadRef.current.href = URL.createObjectURL(blob);
-    downloadRef.current.onload = function () {
-      URL.revokeObjectURL(downloadRef.current.href);
-    };
-  };
+  //   downloadRef.current.href = URL.createObjectURL(blob);
+  //   downloadRef.current.onload = function () {
+  //     URL.revokeObjectURL(downloadRef.current.href);
+  //   };
+  // };
 
   let reconnect = () => {
     WebSocketConnection();
@@ -572,9 +548,10 @@ export default function Main() {
       <Grid
         container
         justifyContent="center"
-        maxWidth={700}
+        maxWidth={800}
         spacing={5}
         display="flex"
+
       >
         <Grid
           item
@@ -644,9 +621,7 @@ export default function Main() {
                 },
               }}
             >
-              {
-                isloading && <LinearProgressWithLabel value={progress} />
-              }
+              {isloading && <LinearProgressWithLabel value={progress} />}
               {iscomming ? (
                 <>
                   <label htmlFor="">Comming...</label>
@@ -774,15 +749,14 @@ export default function Main() {
                       </Box>
                     ) : (
                       <>
-                        <label>Text</label>
+                        <Typography variant="h5" fontWeight={700}>Texts</Typography>
                         <IncommingTexts recievedData={recievedData} />
-                        <hr />
-                        <label>File</label>
-
+                        <Divider sx={{marginTop:'4px'}}/>
+                        <Typography variant="h5"fontWeight={700}>Files</Typography>
                         <IncommingFiles
-                          downloadRef={downloadRef}
+                          // downloadRef={downloadRef}
                           recievedData={recievedData}
-                          bse64toFileUrl={bse64toFileUrl}
+                          // bse64toFileUrl={bse64toFileUrl}
                         />
                       </>
                     )}
@@ -809,7 +783,7 @@ export default function Main() {
                     sx={{ width: "6rem", height: "3rem" }}
                     variant="contained"
                     onClick={handleSubmit}
-                    disabled={isloading || iscomming || isSellectFile }
+                    disabled={isloading || iscomming || isSellectFile}
                   >
                     {isloading && !iserror ? "Sending..." : "Send"}
                   </Button>

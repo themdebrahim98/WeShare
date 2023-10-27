@@ -1,7 +1,10 @@
-/* *{
+*{
  
-  background: linear-gradient(45deg,#74ebd5,#ACB6E5);
-} */
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
 .pageLoader {
   position: absolute;
   top: calc(50% - 4em);
@@ -22,4 +25,11 @@
   100% {
     transform: rotate(360deg);
   }
+}
+
+
+.App{
+  background: radial-gradient(circle at 17% 29%, rgba(0, 188, 212, 1) 0%, rgba(238, 130, 238, 1) 100%);
+  min-height: 100vh;
+  max-width: 100vw;
 }

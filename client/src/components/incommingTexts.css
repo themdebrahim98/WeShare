@@ -5,6 +5,9 @@
   justify-content: space-between;
 }
 
+.text_wrapper p{
+  font-size: 12px;
+}
 .filecopy {
   font-size: 25px;
   color: rgb(24, 144, 255);

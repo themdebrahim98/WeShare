@@ -50,7 +50,7 @@ wss.on("connection", function (ws) {
             type: "pong",
             message: "pong",
           },
-          { highWaterMark: (1024 * 1024)  }
+          { highWaterMark: 1024 * 1024 }
         );
         ws.send(pongmessage);
       }
@@ -96,16 +96,13 @@ wss.on("connection", function (ws) {
             };
             let encode = CBOR.encodeOne(obj, {
               highWaterMark: Math.max(
-                ((1024 * 1024 ) * 2 ),
-               0
+                4194304 * 2, // 4mb * 2
+                incommingSubmitedData.data.length
               ),
             });
 
             client.send(encode);
           } catch (error) {
-            console.log("Error while sending input file data");
-            console.log(error.message);
-
             let errorMessage = CBOR.encode({
               type: "error",
               message: "failed to send input file data  to other  client",
@@ -122,8 +119,8 @@ wss.on("connection", function (ws) {
           ws.send(noClient);
         }
       } else if (incommingSubmitedData.type === "isrecieved") {
-        console.log("recieved", incommingSubmitedData);
-       let client = map.get(+incommingSubmitedData.data.clientAid);
+        console.log("receved");
+        let client = map.get(+incommingSubmitedData.data.clientAid);
         client.send(
           CBOR.encode({
             data: {
@@ -133,9 +130,9 @@ wss.on("connection", function (ws) {
             type: "isrecieved",
           })
         );
-      }else if(incommingSubmitedData.type == "isrecievedText"){
+      } else if (incommingSubmitedData.type == "isrecievedText") {
         let client = map.get(+incommingSubmitedData.data.clientAid);
-        if(client){
+        if (client) {
           client.send(
             CBOR.encode({
               data: {
@@ -145,11 +142,8 @@ wss.on("connection", function (ws) {
               type: "isrecievedText",
             })
           );
-
         }
-      }
-      
-      else if (incommingSubmitedData.type === "commingStatus") {
+      } else if (incommingSubmitedData.type === "commingStatus") {
         if (map.has(+incommingSubmitedData.data.id)) {
           client = map.get(+incommingSubmitedData.data.id);
           try {
@@ -161,7 +155,6 @@ wss.on("connection", function (ws) {
               })
             );
           } catch (error) {
-            console.log("failed to send comming status to client");
             let errorMessage = CBOR.encode({
               type: "error",
               message: "failed to send comming status to client",
@@ -199,20 +192,17 @@ wss.on("connection", function (ws) {
   });
 
   ws.onclose = () => {
-    console.log("clientdisconnected", ws.id, "ok");
     // ws.send(CBOR.encode(
     //     {
     //         type:'lostconnection'
     //     }
     // ))
-    console.log(map.keys);
     map.delete(ws.id);
   };
 });
 
 app.use(express.static(path.resolve(__dirname, "../client/build")));
 // app.use(express.static('/home/mdebrahim/Documents/MY_CODE/chat/chats/client/build'))
-console.log(path.resolve(__dirname, "../client/build"));
 
 app.use(cors());
 

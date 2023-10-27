@@ -14,13 +14,13 @@ Send and Receive files directly from your browser
 [![Contributors](https://img.shields.io/github/contributors/mdebrahim98/WeShare.svg)](https://github.com/mdebrahim98/WeShare/graphs/contributors)
 [![License](https://img.shields.io/github/license/mdebrahim98/WeShare.svg)](https://github.com/mdebrahim98/WeShare/blob/master/LICENSE)
 
-# What is [WeShare](https://weshare-qc5z.onrender.com/)?
+# What is [WeShare](https://weshare-yu73.onrender.com/)?
 
 WeShare helps you to send or receive text or file from one device to another one through browser, it doesn't require any login or registration.
 
 ## How to use?
 
-If you want to send something to someone, visit the [app](https://weshare-qc5z.onrender.com/) and also let recipient open the same link, select the files or enter text you want to send and enter the `Recipient ID` shown on the top of centered control panel of recipient device, then hit `Send` button to send to your recipient device.
+If you want to send something to someone, visit the [app](https://weshare-yu73.onrender.com/) and also let recipient open the same link, select the files or enter text you want to send and enter the `Recipient ID` shown on the top of centered control panel of recipient device, then hit `Send` button to send to your recipient device.
 
 ## Feedback
 

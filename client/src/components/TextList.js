@@ -8,7 +8,6 @@ export function TextList({ text, fromid, text_size }) {
   const textRef = useRef();
   const fileCopy = () => {
     let copyText = textRef.current;
-    console.log(copyText.innerHTML, textRef.current);
     navigator.clipboard.writeText(copyText.innerHTML);
     alert("text coppied");
   };
@@ -34,9 +33,9 @@ export function TextList({ text, fromid, text_size }) {
           <Grid container alignItems='center' justifyContent="space-between">
             <Typography>{text_size}B</Typography>
             <Divider orientation="vertical" variant="large" flexItem />
-            <IconButton>
+            <IconButton onClick={fileCopy}>
               {" "}
-              <ContentCopyIcon onClick={fileCopy} />
+              <ContentCopyIcon  />
             </IconButton>
           </Grid>
         </Grid>

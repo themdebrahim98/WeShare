@@ -52,13 +52,13 @@ export function FileList({ file_name, file, file_Size, fromid }) {
         <Grid container alignItems="center" justifyContent="space-between">
           <Typography>{file_Size}B</Typography>
           <Divider orientation="vertical" variant="large" flexItem />
-          <IconButton>
+          <IconButton onClick={() => {
+                  bse64toFileUrl(file);
+                }}>
             <Link ref={downloadRef} download={file_name} href="#">
               <FiDownload
                 className="download"
-                onClick={() => {
-                  bse64toFileUrl(file);
-                }}
+                
               />
             </Link>
           </IconButton>

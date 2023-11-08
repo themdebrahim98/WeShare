@@ -471,7 +471,7 @@ export default function Main() {
     let selected_file = inputref.current.files[0];
     const reader = new FileReader();
     let offset = 0;
-    const chunkSize = 4194304; // 4mb
+    const chunkSize = 4194304 / (4 * 2); // 4mb
 
     reader.onload = (e) => {
       const chunk = e.target.result;

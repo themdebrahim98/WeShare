@@ -79,6 +79,7 @@ wss.on("connection", function (ws) {
           ws.send(noClient);
         }
       } else if (incommingSubmitedData.type === "inputFileChunk") {
+        
         if (map.has(+incommingSubmitedData.clientBid)) {
           try {
             client = map.get(+incommingSubmitedData.clientBid);
